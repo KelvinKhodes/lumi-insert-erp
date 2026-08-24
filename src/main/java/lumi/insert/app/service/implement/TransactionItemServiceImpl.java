@@ -336,6 +336,7 @@ public class TransactionItemServiceImpl implements TransactionItemService{
             .quantity(request.getQuantity().negate())
             .description("REFUND: " + product.getName())
             .product(product)
+            .productName(product.getName())
             .transaction(transaction)
             .build();
 
