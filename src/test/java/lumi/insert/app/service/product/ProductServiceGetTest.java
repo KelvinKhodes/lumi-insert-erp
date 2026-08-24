@@ -66,7 +66,7 @@ public class ProductServiceGetTest extends BaseProductServiceTest{
         List<ProductName> products = new ArrayList<ProductName>();
 
         for ( int i = 1; i <= 12; i++ ) {
-            ProductName dumpProduct = new ProductName(Long.valueOf(i), "Product " + i);
+            ProductName dumpProduct = new ProductName(Long.valueOf(i), "Product " + i, BigDecimal.ZERO);
  
             products.add(dumpProduct);
         }

@@ -42,7 +42,7 @@ public class SupplyControllerGetTest extends BaseSupplyControllerTest{
     @DisplayName("should return Supply Response when request Trx id is valid")
     public void getSupplyAPI_validId_shouldReturnEntity() throws Exception{
         List<SupplyItemResponse> items = new ArrayList<>();
-        SupplyItemResponse supplyItemResponse = new SupplyItemResponse(UuidCreator.getTimeOrderedEpochFast(), new ProductName(1L, "Product"), BigDecimal.valueOf(10L), BigDecimal.valueOf(10L), null);
+        SupplyItemResponse supplyItemResponse = new SupplyItemResponse(UuidCreator.getTimeOrderedEpochFast(), new ProductName(1L, "Product", BigDecimal.ZERO), BigDecimal.valueOf(10L), BigDecimal.valueOf(10L), null);
         items.add(supplyItemResponse);
         items.add(supplyItemResponse);
 

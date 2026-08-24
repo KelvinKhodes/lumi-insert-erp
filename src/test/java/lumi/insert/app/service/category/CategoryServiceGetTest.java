@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import lumi.insert.app.dto.request.CategoryGetRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Pageable;
@@ -69,12 +70,13 @@ public class CategoryServiceGetTest extends BaseCategoryServiceTest{
             return categoryResponse;
         });
 
-        PaginationRequest paginationRequest = PaginationRequest.builder()
+
+        CategoryGetRequest categoryGetRequest = CategoryGetRequest.builder()
         .page(0)
         .size(5)
         .build();
 
-        Slice<CategoryResponse> result = categoryServiceMock.getCategories(paginationRequest);
+        Slice<CategoryResponse> result = categoryServiceMock.getCategories(categoryGetRequest);
 
         assertEquals(9, result.getNumberOfElements());
         assertEquals("Category9", result.getContent().getLast().name());

@@ -36,9 +36,8 @@ public class SupplierServiceEditTest extends BaseSupplierServiceTest{
     }
 
     @Test
-    @DisplayName("Should thorw NotFoundEntity Exc when requested Supplier is not found")
+    @DisplayName("Should throw NotFoundEntity Exc when requested Supplier is not found")
     void updateSupplier_notFound_throwNotFound(){
-        when(supplierRepository.existsByName(anyString())).thenReturn(false);
         when(supplierRepository.findById(setupSupplier.getId())).thenReturn(Optional.empty());
 
         SupplierUpdateRequest request = SupplierUpdateRequest.builder()
@@ -52,6 +51,7 @@ public class SupplierServiceEditTest extends BaseSupplierServiceTest{
     @Test
     @DisplayName("Should thorw DuplicateEntityException Exc when requested update name is exists")
     void updateSupplier_duplicateEntity_throwDuplicate(){
+        when(supplierRepository.findById(setupSupplier.getId())).thenReturn(Optional.of(setupSupplier));
         when(supplierRepository.existsByName("new Name LTE")).thenReturn(true);
 
         SupplierUpdateRequest request = SupplierUpdateRequest.builder()

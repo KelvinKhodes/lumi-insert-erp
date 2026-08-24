@@ -53,7 +53,6 @@ public class CustomerServiceEditTest extends BaseCustomerServiceTest{
     @Test
     @DisplayName("Should thorw NotFoundEntity Exc when requested customer is not found")
     void updateCustomer_notFound_throwNotFound(){
-        when(customerRepository.existsByName(anyString())).thenReturn(false);
         when(customerRepository.findById(setupCustomer.getId())).thenReturn(Optional.empty());
 
         CustomerUpdateRequest request = CustomerUpdateRequest.builder()
@@ -67,6 +66,7 @@ public class CustomerServiceEditTest extends BaseCustomerServiceTest{
     @Test
     @DisplayName("Should thorw DuplicateEntityException Exc when requested update name is exists")
     void updateCustomer_duplicateEntity_throwDuplicate(){
+        when(customerRepository.findById(setupCustomer.getId())).thenReturn(Optional.of(setupCustomer));
         when(customerRepository.existsByName("new Name LTE")).thenReturn(true);
 
         CustomerUpdateRequest request = CustomerUpdateRequest.builder()

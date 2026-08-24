@@ -86,8 +86,8 @@ public class MemoRepositoryTest  extends TestContainerTest {
         Slice<MemoResponse> activeMemosByRoleOrPublic = memoRepository.findActiveMemosByRoleOrPublic(null, EmployeeRole.FINANCE, LocalDateTime.now().minusHours(1));
 
         assertEquals(2, activeMemosByRoleOrPublic.getNumberOfElements());
-        assertEquals(financeMemo.getBody(), activeMemosByRoleOrPublic.getContent().getFirst().body()); 
-        assertEquals(allMemo.getBody(), activeMemosByRoleOrPublic.getContent().getLast().body());
+        assertEquals(financeMemo.getBody(), activeMemosByRoleOrPublic.getContent().getLast().body());
+        assertEquals(allMemo.getBody(), activeMemosByRoleOrPublic.getContent().getFirst().body());
     }
 
     @Test

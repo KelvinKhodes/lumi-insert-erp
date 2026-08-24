@@ -132,11 +132,12 @@ public class TransactionItemControllerUpdateTest extends BaseTransactionItemCont
 
     @Test
     @DisplayName("should return transaction item dto when refund Trx item success")
-    public void refundTransactionItemAPI_validId_shouldReturnDTO() throws Exception{  
-        when(transactionItemService.refundTransactionItem(eq(transactionItemResponse.id()), any(ItemRefundRequest.class))).thenReturn(transactionItemResponse);
+    public void refundTransactionItemAPI_validId_shouldReturnDTO() throws Exception{
+        UUID transactionId = UUID.randomUUID();
+        when(transactionItemService.refundTransactionItem(eq(transactionId), any(ItemRefundRequest.class))).thenReturn(transactionItemResponse);
 
         mockMvc.perform(
-            post("/api/transactions/" + UUID.randomUUID().toString() + "/items/" + transactionItemResponse.id().toString() + "/refund")
+            post("/api/transactions/" + transactionId.toString() + "/items/" + transactionItemResponse.id().toString() + "/refund")
             .accept(MediaType.APPLICATION_JSON_VALUE)
             .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
             .param("quantity", "5")
@@ -153,11 +154,12 @@ public class TransactionItemControllerUpdateTest extends BaseTransactionItemCont
 
     @Test 
     @WithMockUser(username = "admin", roles = "OWNER")
-    public void refundTransactionItemAPI_higherRole_shouldReturnDTO() throws Exception{  
-        when(transactionItemService.refundTransactionItem(eq(transactionItemResponse.id()), any(ItemRefundRequest.class))).thenReturn(transactionItemResponse);
+    public void refundTransactionItemAPI_higherRole_shouldReturnDTO() throws Exception{
+        UUID transactionId = UUID.randomUUID();
+        when(transactionItemService.refundTransactionItem(eq(transactionId), any(ItemRefundRequest.class))).thenReturn(transactionItemResponse);
 
         mockMvc.perform(
-            post("/api/transactions/" + UUID.randomUUID().toString() + "/items/" + transactionItemResponse.id().toString() + "/refund")
+            post("/api/transactions/" + transactionId.toString() + "/items/" + transactionItemResponse.id().toString() + "/refund")
             .accept(MediaType.APPLICATION_JSON_VALUE)
             .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
             .param("quantity", "5")
@@ -192,11 +194,12 @@ public class TransactionItemControllerUpdateTest extends BaseTransactionItemCont
 
     @Test
     @DisplayName("should return error not found when request Trx item Not Found")
-    public void refundTransactionItemAPI_invalidId_shouldReturnErrorNotFound() throws Exception{ 
-        when(transactionItemService.refundTransactionItem(eq(transactionItemResponse.id()), any(ItemRefundRequest.class))).thenThrow(new NotFoundEntityException("Transaction Items with ID " + 1L + " was not found"));
+    public void refundTransactionItemAPI_invalidId_shouldReturnErrorNotFound() throws Exception{
+        UUID transactionId = UUID.randomUUID();
+        when(transactionItemService.refundTransactionItem(eq(transactionId), any(ItemRefundRequest.class))).thenThrow(new NotFoundEntityException("Transaction Items with ID " + 1L + " was not found"));
         
-       mockMvc.perform(
-            post("/api/transactions/" + UUID.randomUUID().toString() + "/items/" + transactionItemResponse.id().toString() + "/refund")
+        mockMvc.perform(
+            post("/api/transactions/" + transactionId.toString() + "/items/" + transactionItemResponse.id().toString() + "/refund")
             .accept(MediaType.APPLICATION_JSON_VALUE)
             .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
             .param("quantity", "5")
@@ -210,11 +213,12 @@ public class TransactionItemControllerUpdateTest extends BaseTransactionItemCont
 
     @Test
     @DisplayName("should return error forbiddenrequest when request Transaction is not pending")
-    public void refundTransactionItemAPI_nonPendingTrx_shouldReturnErrorForbiddenRequest() throws Exception{ 
-        when(transactionItemService.refundTransactionItem(eq(transactionItemResponse.id()), any(ItemRefundRequest.class))).thenThrow(new ForbiddenRequestException("Couldn't delete the item because Transaction Status is not PENDING(CART)"));
+    public void refundTransactionItemAPI_nonPendingTrx_shouldReturnErrorForbiddenRequest() throws Exception{
+        UUID transactionId = UUID.randomUUID();
+        when(transactionItemService.refundTransactionItem(eq(transactionId), any(ItemRefundRequest.class))).thenThrow(new ForbiddenRequestException("Couldn't delete the item because Transaction Status is not PENDING(CART)"));
 
-       mockMvc.perform(
-            post("/api/transactions/" + UUID.randomUUID().toString() + "/items/" + transactionItemResponse.id().toString() + "/refund")
+        mockMvc.perform(
+            post("/api/transactions/" + transactionId.toString() + "/items/" + transactionItemResponse.id().toString() + "/refund")
             .accept(MediaType.APPLICATION_JSON_VALUE)
             .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
             .param("quantity", "5")

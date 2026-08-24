@@ -65,7 +65,11 @@ public class SupplyServiceEditTest extends BaseSupplyServiceTest {
         setupSupply.setSupplier(setupSupplier);
         setupSupply.setStatus(SupplyStatus.UNPAID);
 
+        setupStockCard.setNewStock(setupProduct.getStockQuantity());
+        setupStockCard.setNewPrice(setupProduct.getBasePrice());
+
         when(supplyRepositoryMock.findByIdDetail(any())).thenReturn(Optional.of(setupSupply));
+        when(stockCardRepositoryMock.getLastPurchase(setupProduct.getId())).thenReturn(Optional.of(setupStockCard));
 
         SupplyResponse cancelSupply = supplyServiceMock.cancelSupply(UUID.randomUUID());
         assertEquals(SupplyStatus.CANCELLED, cancelSupply.status());
@@ -284,7 +288,11 @@ public class SupplyServiceEditTest extends BaseSupplyServiceTest {
                 .quantity(BigDecimal.valueOf(2L))
                 .build();
 
+        setupStockCard.setNewStock(setupProduct.getStockQuantity());
+        setupStockCard.setNewPrice(setupProduct.getBasePrice());
+
         when(supplyItemRepositoryMock.findBySupplyIdAndProductId(supply.getId(), request.getProductId())).thenReturn(List.of(setupSupplyItem));
+        when(stockCardRepositoryMock.getLastPurchase(setupProduct.getId())).thenReturn(Optional.of(setupStockCard));
 
         SupplyResponse updateSupply = supplyServiceMock.refundSupplyItem(supply.getId(), request);
 
@@ -342,7 +350,11 @@ public class SupplyServiceEditTest extends BaseSupplyServiceTest {
                 .quantity(BigDecimal.valueOf(1L))
                 .build();
 
+        setupStockCard.setNewStock(setupProduct.getStockQuantity().add(BigDecimal.valueOf(1)));
+        setupStockCard.setNewPrice(BigDecimal.valueOf(510));
+
         when(supplyItemRepositoryMock.findBySupplyIdAndProductId(supply.getId(), request.getProductId())).thenReturn(List.of(setupSupplyItem, refundItem));
+        when(stockCardRepositoryMock.getLastPurchase(setupProduct.getId())).thenReturn(Optional.of(setupStockCard));
 
         SupplyResponse updateSupply = supplyServiceMock.refundSupplyItem(supply.getId(), request);
 

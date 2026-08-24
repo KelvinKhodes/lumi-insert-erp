@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
+import lumi.insert.app.dto.request.CategoryGetRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Slice;
@@ -31,7 +32,7 @@ public class CategoryControllerGetTest extends BaseCategoryControllerTest {
         Slice<Category> mockSliceCategory = new SliceImpl<Category>(List.of(mockCategory));
         Slice<CategoryResponse> resultMap = mockSliceCategory.map(categoryMapper::createDtoResponseFromCategory);
 
-        when(categoryService.getCategories(any(PaginationRequest.class))).thenReturn(resultMap);
+        when(categoryService.getCategories(any(CategoryGetRequest.class))).thenReturn(resultMap);
 
          mockMvc.perform(
             get("/api/categories")

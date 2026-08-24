@@ -18,7 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 @WithMockUser(username = "admin", roles = "CASHIER")
 public abstract class BaseCustomerControllerTest extends BaseControllerTest{
  
-    CustomerDetailResponse customerDetailResponse = new CustomerDetailResponse(UUID.randomUUID(), "Test LTE.", "test@gmail.com", "Test - 00xxx", "St. Test 12 A", null, null, null, null);
+    CustomerDetailResponse customerDetailResponse = new CustomerDetailResponse(UUID.randomUUID(), "Test LTE.", "test@gmail.com", "Test - 00xxx", "St. Test 12 A", null, null, null, null, null, null, null);
 
     Slice<CustomerResponse> sliceCustomerResponse = new SliceImpl<>(List.of(new CustomerResponse(customerDetailResponse.id(), customerDetailResponse.name(), customerDetailResponse.email(), customerDetailResponse.contact())));
 

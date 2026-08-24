@@ -2,6 +2,7 @@ package lumi.insert.app.service.supply;
 
 
 
+import lumi.insert.app.core.entity.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,10 +14,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.f4b6a3.uuid.UuidCreator;
 
-import lumi.insert.app.core.entity.Product;
-import lumi.insert.app.core.entity.Supplier;
-import lumi.insert.app.core.entity.Supply;
-import lumi.insert.app.core.entity.SupplyItem;
 import lumi.insert.app.core.repository.ProductRepository;
 import lumi.insert.app.core.repository.StockCardRepository;
 import lumi.insert.app.core.repository.SupplierRepository;
@@ -51,6 +48,7 @@ public abstract class BaseSupplyServiceTest {
     @Mock
     SupplyItemRepository supplyItemRepositoryMock;
 
+
     @Mock
     JpaSpecGenerator jpaSpecGenerator;
 
@@ -67,6 +65,8 @@ public abstract class BaseSupplyServiceTest {
     public Product setupProduct;
 
     public Supplier setupSupplier;
+
+    public StockCard setupStockCard;
 
     @BeforeEach
     void setUp(){ 
@@ -86,6 +86,10 @@ public abstract class BaseSupplyServiceTest {
         setupSupplier = Supplier.builder()
         .id(UuidCreator.getTimeOrderedEpochFast())
         .build();
+
+        setupStockCard = StockCard.builder()
+            .id(UuidCreator.getTimeOrderedEpochFast())
+                .build();
 
         ReflectionTestUtils.setField(allSupplyMapper, "productMapper", new ProductMapperImpl());
     }
