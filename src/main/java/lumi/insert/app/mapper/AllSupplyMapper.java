@@ -25,10 +25,12 @@ import lumi.insert.app.dto.response.SupplyResponse;
 @Mapper(componentModel = "spring", uses = ProductMapper.class)
 public interface AllSupplyMapper {
     
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, unmappedTargetPolicy = ReportingPolicy.IGNORE) 
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, unmappedTargetPolicy = ReportingPolicy.IGNORE)
+    @Mapping(target = "supplierId", source = "supplier.id")
     SupplyResponse createSimpleDTO(Supply supply);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, unmappedTargetPolicy = ReportingPolicy.IGNORE)
+    @Mapping(target = "supplierId", source = "supplier.id")
     SupplyDetailResponse createDetailDTO(Supply supply);
 
     @BeanMapping(unmappedTargetPolicy = ReportingPolicy.IGNORE) 

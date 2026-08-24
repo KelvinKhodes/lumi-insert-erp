@@ -40,6 +40,7 @@ public interface AllTransactionMapper {
 
     @BeanMapping(unmappedTargetPolicy = ReportingPolicy.IGNORE)
     @Mapping(target = "productId", source = "product.id")
+    @Mapping(target = "transactionId", source = "transaction.id")
     TransactionItemResponse createTransactionItemResponseDto(TransactionItem transactionItem);
   
     @BeanMapping(unmappedTargetPolicy = ReportingPolicy.IGNORE)
