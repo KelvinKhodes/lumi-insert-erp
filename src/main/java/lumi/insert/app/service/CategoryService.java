@@ -1,5 +1,6 @@
 package lumi.insert.app.service;
 
+import lumi.insert.app.dto.request.CategoryGetRequest;
 import org.springframework.data.domain.Slice;
 
 import lumi.insert.app.dto.request.CategoryCreateRequest;
@@ -19,7 +20,7 @@ public interface CategoryService {
 
     CategoryResponse getCategoryById(Long id);
 
-    Slice<CategoryResponse> getCategories(PaginationRequest request);
+    Slice<CategoryResponse> getCategories(CategoryGetRequest request);
 
 
 }

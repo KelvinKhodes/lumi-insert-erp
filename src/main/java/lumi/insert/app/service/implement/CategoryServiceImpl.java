@@ -1,6 +1,7 @@
 package lumi.insert.app.service.implement;
  
 
+import lumi.insert.app.dto.request.CategoryGetRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -186,13 +187,13 @@ public class CategoryServiceImpl implements CategoryService {
      * @return a {@link Slice} of {@link CategoryResponse} objects.
      */
     @Override
-    public Slice<CategoryResponse> getCategories(PaginationRequest request) {
+    public Slice<CategoryResponse> getCategories(CategoryGetRequest request) {
         log.debug("Getting categories with pagination - page: {}, size: {}", request.getPage(), request.getSize());
 
         Sort sort = Sort.by("name").ascending();
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize()).withSort(sort);
 
-        Slice<Category> searchedCategories = categoryRepository.findAllByIsActiveTrue(pageable);
+        Slice<Category> searchedCategories = request.getIsArchieved() ? categoryRepository.findAllByIsActiveFalse(pageable) :  categoryRepository.findAllByIsActiveTrue(pageable);
         log.debug("Found {} categories", searchedCategories.getNumberOfElements());
 
         Slice<CategoryResponse> response = searchedCategories.map(categoryMapper::createDtoResponseFromCategory);
