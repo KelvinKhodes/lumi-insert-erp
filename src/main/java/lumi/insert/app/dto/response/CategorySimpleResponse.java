@@ -9,7 +9,11 @@ public record CategorySimpleResponse(
     Long id, 
     
     @Schema(description = "Display name of the category", example = "Onderdil Motor")
-    String name
+    String name,
+
+    @Schema(description = "Active/archive status of the Category")
+    Boolean isActive
+
 ) implements Identifiable {
 
     @Override
