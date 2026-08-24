@@ -48,7 +48,8 @@ public class JwtFilter extends OncePerRequestFilter{
     private HandlerExceptionResolver resolver;
 
     List<String> link = List.of(
-        "/auth/login", 
+        "/auth/login",
+        "/auth/refresh",
         "swagger",
         "api-docs", 
         "actuator"
