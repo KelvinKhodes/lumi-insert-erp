@@ -31,10 +31,10 @@ public class OpenApiConfig {
                 .description("Comprehensive REST API for LUMI Insert inventory management system. Handles categories, products, employees, customers, transactions, supplies, and more.")
                 .contact(new io.swagger.v3.oas.models.info.Contact()
                     .name("LUMI Insert Support")
-                    .email("support@lumiinsert.com"))
+                    .email("support@lumi-insert.my.id"))
                 .license(new License()
                     .name("Licensed")
-                    .url("https://www.lumiinsert.com")))
+                    .url("https://www.lumi-insert.my.id")))
             .components(new Components()
                 .addSecuritySchemes("bearerAuth", 
                     new SecurityScheme()
