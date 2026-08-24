@@ -3,7 +3,11 @@ package lumi.insert.app.utils.security;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import jakarta.annotation.PostConstruct;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import com.auth0.jwt.JWT;
@@ -22,15 +26,20 @@ import lumi.insert.app.core.entity.Employee;
 public class JwtUtils {
 
     @Value("${app.jwt.secret}")
-    private String jwtSecret;
+    public String jwtSecret;
 
-    Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
+    Algorithm algorithm;
     
     String issuer = "LUMI-INSERT";
 
-    JWTVerifier jwtVerifier = JWT.require(algorithm)
-            .withIssuer(issuer).build();
+    JWTVerifier jwtVerifier;
 
+    @PostConstruct
+    public void init() {
+        this.algorithm = Algorithm.HMAC256(jwtSecret);
+        this.jwtVerifier = JWT.require(algorithm)
+            .withIssuer(issuer).build();
+    }
     /**
      * Create Token based on employee credentials with expired: 15 minutes.
      * @param employee
