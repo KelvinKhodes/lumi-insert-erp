@@ -1,6 +1,7 @@
 package lumi.insert.app.dto.response;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -29,11 +30,21 @@ public record CustomerDetailResponse(
     BigDecimal totalUnpaid, 
     
     @Schema(description = "Total lifetime amount paid by this customer", example = "5250000")
-    BigDecimal totalPaid, 
-    
+    BigDecimal totalPaid,
+
+    @Schema(description = "Remaining balance eligible for refund", example = "95000")
+    BigDecimal totalUnrefunded,
+
+    @Schema(description = "Total amount already refunded to the customer", example = "0")
+    BigDecimal totalRefunded,
+
     @Schema(description = "Status indicating if the customer account is active", example = "true")
-    Boolean isActive
-)  implements Identifiable {
+    Boolean isActive,
+
+    @Schema(description = "Pictures url that represent and desribe the customer")
+    List<String> pictureUrl
+
+    )  implements Identifiable {
 
     @Override
     public String getId() {
