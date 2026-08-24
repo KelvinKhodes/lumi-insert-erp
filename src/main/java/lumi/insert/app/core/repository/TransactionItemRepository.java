@@ -30,19 +30,20 @@ public interface TransactionItemRepository extends JpaRepository<TransactionItem
 
     Slice<TransactionItem> findAllByTransactionId(UUID transactionId, Pageable pageable);
  
-    @Query(value = "SELECT ti.productName as productName, SUM(ti.quantity) as totalSold FROM " +
-        "transaction_items ti WHERE " +
-        "ti.createdAt between :startDate AND :endDate " +
-        "GROUP BY ti.productName " +
+    @Query(value = "SELECT p.name as productName, SUM(ti.quantity) as totalSold " +
+        "FROM transaction_items ti " +
+        "JOIN ti.product p " +
+        "WHERE ti.updatedAt between :startDate AND :endDate " +
+        "GROUP BY p.id, p.name " +
         "ORDER BY SUM(ti.quantity) DESC"
     )
     List<ProductSale> getProductTopSales(@Param("startDate")LocalDateTime startDate, @Param("endDate")LocalDateTime endDate);
 
-    @Query(value = "SELECT ti.productName as productName, SUM(ti.quantity) as totalRefunded FROM " +
-        "transaction_items ti WHERE " +
-        "ti.quantity < 0 AND " +
-        "ti.createdAt between :startDate AND :endDate " +
-        "GROUP BY ti.productName " +
+    @Query(value = "SELECT p.name as productName, SUM(ti.quantity) as totalRefunded " +
+        "FROM transaction_items ti " +
+        "JOIN ti.product p " +
+        "WHERE ti.quantity < 0 AND ti.updatedAt between :startDate AND :endDate " +
+        "GROUP BY p.id, p.name " +
         "ORDER BY SUM(ti.quantity) ASC"
     )
     List<ProductRefund> getProductTopRefund(@Param("startDate")LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
