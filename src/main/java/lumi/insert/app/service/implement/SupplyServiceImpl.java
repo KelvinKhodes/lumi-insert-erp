@@ -325,11 +325,24 @@ public class SupplyServiceImpl implements SupplyService{
  
             // Calculate Product average base price if stock is not 0 
             if(product.getStockQuantity().subtract(reverseItem.getQuantity().abs()).compareTo(BigDecimal.ZERO) != 0) {
-                product.setBasePrice( 
-                    oldSubTotal
-                        .add(supplySubTotal)
-                        .divide(newStock, 4, RoundingMode.HALF_UP)
-                ); 
+//           average formula version 1
+ //                product.setBasePrice(
+//                    oldSubTotal
+//                        .add(supplySubTotal)
+//                        .divide(newStock, 4, RoundingMode.HALF_UP)
+//                );
+//          formula based on stock card last purchase/snapshot
+                StockCard lastPurchase = stockCardRepository.getLastPurchase(product.getId())
+                    .orElseThrow(() -> {
+                    log.debug("Stock card with type PURCHASE for product: {} not found", product.getId());
+                    return new ForbiddenRequestException("Unable to proceed cancel supply, contact administrator");
+                });
+
+                product.setBasePrice(
+                    lastPurchase.getNewPrice().multiply(lastPurchase.getNewStock())
+                        .subtract(reverseItem.getPrice().multiply(item.getQuantity()))
+                        .divide((lastPurchase.getNewStock().subtract(item.getQuantity())), 4, RoundingMode.HALF_UP)
+                );
             }
 
             product.setStockQuantity(newStock);
@@ -385,7 +398,6 @@ public class SupplyServiceImpl implements SupplyService{
                 log.debug("Supply not found with ID: {}", id);
                 return new NotFoundEntityException("Supply with ID " + id + " is not found");
             });
-
         SupplyDetailResponse response = allSupplyMapper.createDetailDTO(supply);
         log.debug("Supply detail response created: {}", response);
         return response;
@@ -536,11 +548,35 @@ public class SupplyServiceImpl implements SupplyService{
  
         // Calculate Product average base price if stock is not 0 
         if(product.getStockQuantity().subtract(request.getQuantity().abs()).compareTo(BigDecimal.ZERO) != 0) {
-            product.setBasePrice( 
-                oldSubTotal
-                    .subtract(supplySubTotal)
-                    .divide(newStock, 4, RoundingMode.HALF_UP)
-            ); 
+//            product.setBasePrice(
+//                oldSubTotal
+//                    .subtract(supplySubTotal)
+//                    .divide(newStock, 4, RoundingMode.HALF_UP)
+//            );
+
+//            formula based on stock card last purchase/snapshot
+
+            StockCard lastPurchase = stockCardRepository.getLastPurchase(product.getId())
+                .orElseThrow(() -> {
+                    log.debug("Stock card with type PURCHASE for product: {} not found", product.getId());
+                    return new ForbiddenRequestException("Unable to proceed refund supply, contact administrator");
+                });
+
+            log.debug("last purchase:{} \n supply subtotal: {}", lastPurchase, supplySubTotal);
+
+            //result is negate
+            BigDecimal totalRefunded = matchItems.stream()
+                .map(SupplyItem::getQuantity)
+                .filter(quantity -> quantity.compareTo(BigDecimal.ZERO) < 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal totalFinalRefunded = supplyItem.getQuantity().add(totalRefunded);
+
+            product.setBasePrice(
+                lastPurchase.getNewPrice().multiply(lastPurchase.getNewStock())
+                    .add(priceFromSupplier.multiply(totalFinalRefunded))
+                    .divide((lastPurchase.getNewStock().add(totalFinalRefunded)), 4, RoundingMode.HALF_UP)
+            );
         } 
 
         product.setStockQuantity(oldStock.subtract(request.getQuantity())); 
@@ -574,9 +610,11 @@ public class SupplyServiceImpl implements SupplyService{
             supply.setTotalUnpaid(BigDecimal.ZERO);
             supply.setTotalPaid(oldTotalPaid.subtract(changeTotalUnpaid.abs()));
             supply.setTotalUnrefunded(oldTotalUnrefunded.add(changeTotalUnpaid.abs()));
+            supply.setStatus(SupplyStatus.UNPAID);
         }
 
-        if(supply.getTotalUnpaid().compareTo(BigDecimal.ZERO) == 0) supply.setStatus(SupplyStatus.COMPLETE);
+        if(supply.getTotalUnpaid().compareTo(BigDecimal.ZERO) == 0 &&
+        supply.getTotalUnrefunded().compareTo(BigDecimal.ZERO) == 0 ) supply.setStatus(SupplyStatus.COMPLETE);
 
         // Calculate supplier payment detail
         Supplier supplier = supply.getSupplier();
@@ -588,6 +626,7 @@ public class SupplyServiceImpl implements SupplyService{
         supplier.setTotalUnpaid(supplier.getTotalUnpaid().subtract(deltaUnpaid));
         supplier.setTotalPaid(supplier.getTotalPaid().subtract(deltaPaid));
         supplier.setTotalUnrefunded(supplier.getTotalUnrefunded().subtract(deltaUnrefunded));
+
 
         stockCardRepository.save(stockCard);
         supplyItemRepository.save(supplyItem);
