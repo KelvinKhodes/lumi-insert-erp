@@ -183,4 +183,24 @@ public class TransactionPaymentController {
 
         return ResponseEntity.ok(wrappedResult);
     }
+
+    /**
+     * Search global transactions payments with filtering options
+     */
+    @Operation(summary = "Search global transactions payments", description = "Search global ransactions payments with filtering options")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved filtered transaction payments")
+    @ApiResponse(responseCode = "404", description = "Transaction not found")
+    @GetMapping(
+        path = "/api/transactions/payments/filter",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    ResponseEntity<WebResponse<Slice<TransactionPaymentResponse>>> searchGlobalTransactionsPaymentsFilter(@ModelAttribute @Valid TransactionPaymentGetByFilter request){
+        log.debug("Transaction payments search request with filter: {}", request);
+        Slice<TransactionPaymentResponse> resultFromService = transactionPaymentService.getTransactionPaymentsByRequests(request);
+        log.debug("Transaction payments found: {}", resultFromService);
+
+        WebResponse<Slice<TransactionPaymentResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
+
+        return ResponseEntity.ok(wrappedResult);
+    }
 }
