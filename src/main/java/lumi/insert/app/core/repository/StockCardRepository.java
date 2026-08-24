@@ -1,6 +1,7 @@
 package lumi.insert.app.core.repository;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
@@ -34,5 +35,12 @@ public interface StockCardRepository extends JpaRepository<StockCard, UUID>, Jpa
                                         Pageable pageable);
 
     Slice<StockCard> findAllByReferenceId(UUID refId);
+
+    @Query(
+        "SELECT s FROM stock_cards s " +
+        "WHERE s.product.id = :productId AND s.type = lumi.insert.app.core.entity.nondatabase.StockMove.PURCHASE " +
+        "ORDER BY s.createdAt DESC LIMIT 1"
+    )
+    Optional<StockCard> getLastPurchase(Long productId);
  
 }
