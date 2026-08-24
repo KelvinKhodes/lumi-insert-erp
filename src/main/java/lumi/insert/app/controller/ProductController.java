@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.List;
 
+import lumi.insert.app.dto.request.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Slice;
@@ -29,12 +30,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lumi.insert.app.controller.wrapper.WebResponse;
 import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import lumi.insert.app.core.repository.projection.ProductOutOfStock;
-import lumi.insert.app.dto.request.PaginationRequest;
-import lumi.insert.app.dto.request.ProductCreateRequest;
-import lumi.insert.app.dto.request.ProductUpdateRequest;
-import lumi.insert.app.dto.request.ProductGetByFilter;
-import lumi.insert.app.dto.request.ProductGetNameRequest;
-import lumi.insert.app.dto.request.ProductStatisticExportRequest;
 import lumi.insert.app.dto.response.ProductDeleteResponse;
 import lumi.insert.app.dto.response.ProductName;
 import lumi.insert.app.dto.response.ProductResponse;
@@ -169,13 +164,13 @@ public class ProductController {
  * Generates a PDF document of all products statistics (Best Seller, Top Refund, Out of stock list)
  */
     @Operation(summary = "Export products statistics to PDF", description = "Generates a PDF document of all products statistics (Best Seller, Top Refund, Out of stock list)")
-    @ApiResponse(responseCode = "200", description = "Successfully exported supply order to PDF") 
+    @ApiResponse(responseCode = "200", description = "Successfully exported products statistic to PDF")
     @GetMapping(
         path = "/api/products/statistics/export",
         produces = MediaType.APPLICATION_PDF_VALUE
     )
     @PreAuthorize("hasAnyRole('OWNER')")
-    ResponseEntity<InputStreamResource> getProductsStatistics(@Valid @ModelAttribute ProductStatisticExportRequest request){ 
+    ResponseEntity<InputStreamResource> exportProductsStatistics(@Valid @ModelAttribute ProductStatisticExportRequest request){
         log.info("Product statistics export request from: {} to: {}", request.getStartDate(), request.getEndDate());
         
         if(request.getStartDate() == null) request.setStartDate(dateUtils.getFirstDateThisMonth());
@@ -193,6 +188,27 @@ public class ProductController {
             .headers(headers)
             .contentType(MediaType.APPLICATION_PDF)
             .body(new InputStreamResource(pdf)); 
+    }
+
+    /**
+     * Retrieve products statistics (Best Seller, Top Refund, Out of stock list)
+     */
+    @Operation(summary = "Get products statistics", description = "Retrieve products statistics (Best Seller, Top Refund, Out of stock list)")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieve products statistics")
+    @GetMapping(
+        path = "/api/products/statistics",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    ResponseEntity<WebResponse<TransactionItemStatisticResponse>> getProductsStatistics(@Valid @ModelAttribute ProductStatisticGetRequest request){
+        log.info("Product statistics get request from: {} to: {}", request.getStartDate(), request.getEndDate());
+
+        if(request.getStartDate() == null) request.setStartDate(dateUtils.getFirstDateThisMonth());
+        if(request.getEndDate() == null) request.setEndDate(dateUtils.getFirstDateNextMonth());
+        TransactionItemStatisticResponse transactionItemStats = transactionItemService.getTransactionItemStats(request.getStartDate(), request.getEndDate());
+
+        WebResponse<TransactionItemStatisticResponse> wrappedResult = WebResponse.getWrapper(transactionItemStats, null);
+        log.info("Product statistics request completed successfully");
+        return ResponseEntity.ok(wrappedResult);
     }
 
 /**
