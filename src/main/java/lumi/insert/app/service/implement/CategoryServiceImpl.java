@@ -193,7 +193,7 @@ public class CategoryServiceImpl implements CategoryService {
         Sort sort = Sort.by("name").ascending();
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize()).withSort(sort);
 
-        Slice<Category> searchedCategories = request.getIsArchieved() ? categoryRepository.findAllByIsActiveFalse(pageable) :  categoryRepository.findAllByIsActiveTrue(pageable);
+        Slice<Category> searchedCategories = request.getIsArchived() ? categoryRepository.findAllByIsActiveFalse(pageable) :  categoryRepository.findAllByIsActiveTrue(pageable);
         log.debug("Found {} categories", searchedCategories.getNumberOfElements());
 
         Slice<CategoryResponse> response = searchedCategories.map(categoryMapper::createDtoResponseFromCategory);
