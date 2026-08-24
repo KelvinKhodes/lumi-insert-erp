@@ -23,7 +23,7 @@ import lumi.insert.app.dto.response.MemoResponse;
 public interface MemoRepository extends JpaRepository<Memo, Long>{
      
     /**
-     * Fetch unviewed active memos base on role and updated time.  
+     * Fetch active memos base on role and updated time.
      * @param id
      * @param role
      * @param time
@@ -35,11 +35,31 @@ public interface MemoRepository extends JpaRepository<Memo, Long>{
        "LEFT JOIN memo_views mv ON mv.memo = m AND mv.employee.id = :employeeId " + 
        "WHERE m.isActive = true " +
        "AND (m.role = :role OR m.role IS NULL) " +
-       "AND m.updatedAt > :time ORDER BY m.updatedAt ASC") 
+       "AND m.updatedAt > :time ORDER BY m.updatedAt DESC")
     Slice<MemoResponse> findActiveMemosByRoleOrPublic(
                                             @Param("employeeId") UUID id,
                                             @Param("role") EmployeeRole role, 
-                                            @Param("time") LocalDateTime time);
+                                            @Param("time") LocalDateTime time
+    );
+
+    /**
+     * Fetch active memos.
+     * @param id
+     * @param role
+     * @param time
+     * @return Slices of {@link MemoResponse}
+     */
+    @Query("SELECT m.id as id, m.title as title, m.body as body, m.images as images, m.role as role, " +
+            "(CASE WHEN mv.id IS NULL THEN false ELSE true END) as isRead " +
+            "FROM memos m " +
+            "LEFT JOIN memo_views mv ON mv.memo = m AND mv.employee.id = :employeeId " +
+            "WHERE m.isActive = true " +
+            "AND m.updatedAt > :time ORDER BY m.updatedAt DESC")
+    Slice<MemoResponse> findActiveMemos(
+            @Param("employeeId") UUID id,
+            @Param("role") EmployeeRole role,
+            @Param("time") LocalDateTime time
+    );
 
     @Modifying
     @Query("UPDATE memos m SET m.isActive = false WHERE m.id = :id")
