@@ -1,6 +1,7 @@
 package lumi.insert.app.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -23,7 +24,13 @@ public record SupplyPaymentResponse(
     String paymentTo, 
     
     @Schema(description = "Flag indicating if this payment is a refund from the supplier (e.g., for returned goods)", example = "false")
-    Boolean isForRefund
+    Boolean isForRefund,
+
+    @Schema(description = "Timestamp when the PAYMENT was added to the supply")
+    LocalDateTime createdAt,
+
+    @Schema(description = "Timestamp when the PAYMENT was last updated")
+    LocalDateTime updatedAt
     
 )  implements Identifiable {
 

@@ -2,6 +2,8 @@ package lumi.insert.app.dto.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder; 
 
@@ -28,8 +30,14 @@ public record ProductResponse (
     BigDecimal stockMinimum, 
     
     @Schema(description = "Simplified category information this product belongs to")
-    CategorySimpleResponse category, 
-    
+    CategorySimpleResponse category,
+
+    @Schema(description = "Active/archive status of the product")
+    Boolean isActive,
+
+    @Schema(description = "Pictures url that represent and desribe the product")
+    List<String> pictureUrl,
+
     @Schema(description = "Timestamp when the product was first added to the system")
     LocalDateTime createdAt, 
     
