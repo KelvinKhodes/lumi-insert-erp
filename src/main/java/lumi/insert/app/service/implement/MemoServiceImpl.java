@@ -1,8 +1,9 @@
 package lumi.insert.app.service.implement;
 
-import java.time.LocalDateTime; 
+import java.time.LocalDateTime;
 
-import org.springframework.beans.factory.annotation.Autowired; 
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Slice; 
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,7 @@ import lumi.insert.app.service.MemoService;
  */
 @Service
 @Slf4j
+@Transactional
 public class MemoServiceImpl implements MemoService{
 
     @Autowired
@@ -167,7 +169,8 @@ public class MemoServiceImpl implements MemoService{
      * @return a {@link Slice} of accessible {@link MemoResponse} objects.
      */
     @Override
-    public Slice<MemoResponse> getMemos(EmployeeLogin login, LocalDateTime time) { 
+    public Slice<MemoResponse> getMemos(EmployeeLogin login, LocalDateTime time) {
+        if (login.getRole() == EmployeeRole.OWNER) return memoRepository.findActiveMemos(login.getId(), login.getRole(), time);
         return memoRepository.findActiveMemosByRoleOrPublic(login.getId(), login.getRole(), time);
     }
 
