@@ -54,7 +54,7 @@ public class JpaSpecGenerator {
             List<Predicate> predicates = new ArrayList<Predicate>();
 
             if(request.getName() != null){
-                predicates.add(builder.equal(root.get("name"), request.getName()));
+                predicates.add(builder.like(builder.lower(root.get("name")), "%" + request.getName().toLowerCase() + "%"));
             }
             if(request.getContact() != null){
                 predicates.add(builder.equal(root.get("contact"), request.getContact()));
@@ -83,7 +83,7 @@ public class JpaSpecGenerator {
                 predicates.add(builder.equal(root.get("category").get("id"), request.getCategoryId()));
             }
             if (request.getName() != null) {
-                predicates.add(builder.like(builder.lower(root.get("name")), "%" + request.getName() + "%"));
+                predicates.add(builder.like(builder.lower(root.get("name")), "%" + request.getName().toLowerCase() + "%"));
             }
             predicates.add(builder.isTrue(root.get("isActive")));
             predicates.add(builder.between(root.get("sellPrice"), request.getMinPrice(), request.getMaxPrice()));
