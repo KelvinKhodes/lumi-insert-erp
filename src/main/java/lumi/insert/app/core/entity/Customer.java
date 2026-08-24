@@ -129,6 +129,13 @@ public class Customer extends BaseAuditing{
     private List<CustomerPicture> customerPictures = new ArrayList<>();
 
     /**
+     * Function to increment {@link #totalTransaction}
+     */
+    public void addTransaction(){
+        this.totalTransaction ++;
+    }
+
+    /**
      * Pre-query function used to normalize BigDecimal scale
      * <p>Rounding half up  and scaled by 4 for precise value</p>
      */
