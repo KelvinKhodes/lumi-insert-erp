@@ -199,7 +199,7 @@ public class TransactionItemController {
     @PreAuthorize("hasAnyRole('CASHIER')")
     ResponseEntity<WebResponse<TransactionItemResponse>> refundTransactionItem(@Parameter(description = "Transaction ID") @PathVariable(name = "transactionId") UUID transactionId, @Parameter(description = "Item ID") @PathVariable(name = "id") UUID id, @Valid @RequestBody ItemRefundRequest request){
         log.info("Refunding transaction item with ID: {}", id);
-        TransactionItemResponse resultFromService = transactionItemService.refundTransactionItem(id, request);
+        TransactionItemResponse resultFromService = transactionItemService.refundTransactionItem(transactionId, request);
         log.debug("Transaction item refunded: {}", resultFromService);
  
         WebResponse<TransactionItemResponse> wrappedResult = WebResponse.getWrapper(resultFromService, null);
