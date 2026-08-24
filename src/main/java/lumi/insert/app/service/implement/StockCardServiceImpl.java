@@ -88,19 +88,19 @@ public class StockCardServiceImpl implements StockCardService{
     )
     public StockCardResponse createStockCard(StockCardCreateRequest request) {
         log.info("Creating stock card for productId={}, referenceId={}, type={}", request.getProductId(), request.getReferenceId(), request.getType());
-        if((request.getType() == StockMove.CUSTOMER_IN.toString() || request.getType() == StockMove.SUPPLIER_IN.toString() ||
-            request.getType() == StockMove.REPAIRED.toString()) && request.getQuantity().compareTo(BigDecimal.ZERO) < 0) {
+        if((request.getType().equals(StockMove.CUSTOMER_IN.toString()) || request.getType().equals(StockMove.SUPPLIER_IN.toString()) ||
+            request.getType().equals(StockMove.REPAIRED.toString())) && request.getQuantity().compareTo(BigDecimal.ZERO) < 0) {
                 log.debug("Invalid stock card quantity for IN type, quantity={}", request.getQuantity());
                 throw new TransactionValidationException("Stock 'IN' type should be positive quantity");
         }
 
-        if((request.getType() == StockMove.CUSTOMER_OUT.toString() || request.getType() == StockMove.SUPPLIER_OUT.toString() ||
-            request.getType() == StockMove.DEFECT.toString()) && request.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
+        if((request.getType().equals(StockMove.CUSTOMER_OUT.toString()) || request.getType().equals(StockMove.SUPPLIER_OUT.toString()) ||
+            request.getType().equals(StockMove.DEFECT.toString())) && request.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
                 log.debug("Invalid stock card quantity for OUT type, quantity={}", request.getQuantity());
                 throw new TransactionValidationException("Stock 'OUT' type should be negative quantity");
         }
 
-        if((request.getType() == StockMove.CUSTOMER_IN.toString() || request.getType() == StockMove.CUSTOMER_OUT.toString()) && !transactionItemRepository.existsById(request.getReferenceId())) {
+        if((request.getType().equals(StockMove.CUSTOMER_IN.toString()) || request.getType().equals(StockMove.CUSTOMER_OUT.toString())) && !transactionItemRepository.existsById(request.getReferenceId())) {
             log.debug("Stock card creation failed, transaction item not found referenceId={}", request.getReferenceId());
             throw new NotFoundEntityException("Transaction Items with ID " + request.getReferenceId() + " was not found");
         }
@@ -125,6 +125,7 @@ public class StockCardServiceImpl implements StockCardService{
             .type(StockMove.valueOf(request.getType()))
             .oldPrice(product.getBasePrice())
             .newPrice(product.getBasePrice())
+            .description(request.getDescription())
             .build();
 
         StockCard savedStockCard = stockCardRepository.save(stockCard);
