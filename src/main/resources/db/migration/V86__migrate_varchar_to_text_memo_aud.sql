@@ -1,0 +1,1 @@
+ALTER TABLE memos_aud ALTER COLUMN body TYPE TEXT;
