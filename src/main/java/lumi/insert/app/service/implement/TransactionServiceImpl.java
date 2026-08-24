@@ -219,7 +219,8 @@ public class TransactionServiceImpl implements TransactionService{
 
         Customer customer = searchedTransaction.getCustomer();
         customer.setTotalUnpaid(customer.getTotalUnpaid().add(searchedTransaction.getGrandTotal()));
-        
+        customer.addTransaction();
+
         String email = customer.getEmail();
         if(email != null) {
             log.info("Sending transaction invoice to: {}", email);
@@ -280,6 +281,15 @@ public class TransactionServiceImpl implements TransactionService{
         }
 
         List<TransactionItem> transactionItems = searchedTransaction.getTransactionItems();
+
+        BigDecimal totalQuantityLeft = transactionItems.stream().map(TransactionItem::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
+        log.debug("Total quantity left from the transaction overall: {}", totalQuantityLeft);
+
+        if(totalQuantityLeft.compareTo(BigDecimal.ZERO) == 0) {
+            log.debug("Transaction cannot be cancelled because items quantity left is 0 (Transaction recognized as VOID)");
+            throw new ForbiddenRequestException("Unable to cancel transaction because items quantity left is 0 (Transaction recognized as VOID)");
+        }
+
         List<Long> listProductIdFromTrxItems = transactionItems.stream().map(item -> item.getProduct().getId()).distinct().toList();
         List<Product> listProductFromTrxItemsUpdated = productRepository.findAllById(listProductIdFromTrxItems);
 
@@ -310,7 +320,7 @@ public class TransactionServiceImpl implements TransactionService{
             UUID refId;
             if(transactionItem != null){
                 BigDecimal totalRefund = transactionItem.stream()
-                    .map(reduce -> reduce.getQuantity())
+                    .map(TransactionItem::getQuantity)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 TransactionItem reverseItem = TransactionItem.builder()
