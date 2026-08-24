@@ -20,15 +20,16 @@ import lumi.insert.app.service.implement.MessageProducerServiceImpl;
 @NoArgsConstructor 
 @AllArgsConstructor
 public class ActivityLogMessage extends ActivityLog{
-    
-    private String requestId;
 
+    private ActivityLog activityLog;
+    private String requestId;
     /**
      * Wrapped {@link ActivityLog} and added trace ID.
      * @param log
      */
     public ActivityLogMessage(ActivityLog log){
         super(log.getId(), log.getEntityName(), log.getEntityId(), log.getAction(), log.getActionMessage(), log.getIpAddress());
+        this.activityLog = log;
         this.requestId = MDC.get("requestId");
     }
 }

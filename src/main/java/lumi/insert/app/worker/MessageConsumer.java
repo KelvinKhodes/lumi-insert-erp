@@ -79,7 +79,7 @@ public class MessageConsumer {
         try {
             if (activityLog.getRequestId() != null) MDC.put("requestId", activityLog.getRequestId());
             log.info("Processing activity log: {}", activityLog.getId());
-            ActivityLog result = activityLogRepository.save(activityLog);
+            ActivityLog result = activityLogRepository.save(activityLog.getActivityLog());
             log.debug("Activity log saved: {}", result);
         } finally {
             MDC.clear();
