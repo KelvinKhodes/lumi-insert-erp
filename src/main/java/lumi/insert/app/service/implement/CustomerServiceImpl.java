@@ -199,16 +199,18 @@ public class CustomerServiceImpl implements CustomerService{
     public CustomerDetailResponse updateCustomer(UUID id, CustomerUpdateRequest request) {
         log.info("Updating customer with ID: {}", id);
 
-        if(request.getName() != null && customerRepository.existsByName(request.getName())) {
-            log.debug("Customer update failed - duplicate name: {}", request.getName());
-            throw new DuplicateEntityException("Customer with name " + request.getName() + " already exists");
-        }
-
         Customer customer = customerRepository.findById(id)
             .orElseThrow(() -> {
                 log.debug("Customer not found for update with ID: {}", id);
                 return new NotFoundEntityException("Customer with id " + id + " is not found");
             });
+
+        if(request.getName() != null && !customer.getName().contains(request.getName()) ) {
+            if(customerRepository.existsByName(request.getName())){
+                log.debug("Customer update failed - duplicate name: {}", request.getName());
+                throw new DuplicateEntityException("Customer with name " + request.getName() + " already exists");
+            }
+        }
 
         customerMapper.updateEntityFromDto(request, customer);
         log.debug("Customer updated in database: {}", customer);

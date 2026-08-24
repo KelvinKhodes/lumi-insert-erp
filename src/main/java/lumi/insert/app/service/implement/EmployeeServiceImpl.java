@@ -40,7 +40,7 @@ import lumi.insert.app.service.StorageService;
  * Implementation of {@link EmployeeService} providing administrative and profile management for staff members.
  * <p>
  * This service handles sensitive operations including password encryption via {@link BCryptPasswordEncoder},
- * session management by invalidating {@link AuthToken} upon critical updates, and employee profile
+ * session management by invalidating {@link lumi.insert.app.core.entity.AuthToken} upon critical updates, and employee profile
  * image processing with automated storage cleanup on persistence failure.
  * </p>
  *
@@ -152,7 +152,7 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     /**
      * Resets an employee's password and invalidates all existing active sessions.
-     * <p>Critical: This operation deletes all associated {@link AuthToken}s to force re-login.</p>
+     * <p>Critical: This operation deletes all associated {@link lumi.insert.app.core.entity.AuthToken}s to force re-login.</p>
      *
      * @param id       the employee identifier.
      * @param password the new plain-text password to be encoded.
@@ -207,7 +207,7 @@ public class EmployeeServiceImpl implements EmployeeService{
                 return new NotFoundEntityException("Employee with ID " + id + " was not found");
             });
 
-        if(request.getUsername() != null){
+        if(request.getUsername() != null && !employee.getUsername().contains(request.getUsername())){
             if(employeeRepository.existsByUsername(request.getUsername())) {
                 log.debug("Update failed, duplicate username={}", request.getUsername());
                 throw new DuplicateEntityException("Employee with username " + request.getUsername() + " already exists");

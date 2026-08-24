@@ -168,16 +168,19 @@ public class SupplierServiceImpl implements SupplierService{
     )
     public SupplierDetailResponse updateSupplier(UUID id, SupplierUpdateRequest request) {
         log.info("Updating supplier with ID: {}", id);
-        if(request.getName() != null && supplierRepository.existsByName(request.getName())) {
-            log.debug("Supplier update failed - duplicate name: {}", request.getName());
-            throw new DuplicateEntityException("Supplier with name " + request.getName() + " already exists");
-        }
 
         Supplier supplier = supplierRepository.findById(id)
             .orElseThrow(() -> {
                 log.debug("Supplier not found for update with ID: {}", id);
                 return new NotFoundEntityException("Supplier with id " + id + " is not found");
             });
+
+        if(request.getName() != null && !supplier.getName().contains(request.getName())) {
+            if(supplierRepository.existsByName(request.getName())){
+                log.debug("Supplier update failed - duplicate name: {}", request.getName());
+                throw new DuplicateEntityException("Supplier with name " + request.getName() + " already exists");
+            }
+        }
 
         supplierMapper.updateEntityFromDto(request, supplier);
         SupplierDetailResponse response = supplierMapper.createDtoDetailResponseFromSupplier(supplier);
