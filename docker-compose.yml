@@ -1,7 +1,6 @@
 services:
   app:
-    build: .
-    image: lumi-insert:latest 
+    image: kelvinkhodes/lumi-insert:latest
     environment:
       - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD}
       - SMTP_MAIL_USERNAME=${SMTP_MAIL_USERNAME}
