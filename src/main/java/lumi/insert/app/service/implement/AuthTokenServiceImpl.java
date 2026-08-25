@@ -147,7 +147,8 @@ public class AuthTokenServiceImpl implements AuthTokenService{
     @ActivityLogger(
         entityName = "auth_tokens",
         action = ActivityAction.LOGOUT,
-        actionMessage = "Employee logout"
+        actionMessage = "Employee logout",
+        entityIdFromSingleParam = true
     )
     public void deleteRefreshToken(String refreshToken) {
         log.info("Deleting refresh token={}", refreshToken);

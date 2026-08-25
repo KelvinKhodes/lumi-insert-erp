@@ -2,6 +2,8 @@ services:
   app:
     image: kelvinkhodes/lumi-insert:latest
     environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx480m
       - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD}
       - SMTP_MAIL_USERNAME=${SMTP_MAIL_USERNAME}
       - SMTP_MAIL_PASSWORD=${SMTP_MAIL_PASSWORD}
@@ -58,6 +60,7 @@ services:
 
   promtail:
     image: grafana/promtail:3.6.9
+    profiles: ["monitoring"]
     depends_on:
       - app
       - loki
@@ -76,6 +79,7 @@ services:
 
   loki:
     image: grafana/loki:3.7.1
+    profiles: ["monitoring"]
     user: "0"
     volumes:
       - ./loki-config.yaml:/etc/loki/config.yaml:ro
@@ -91,6 +95,7 @@ services:
   
   prometheus:
     image: prom/prometheus:v2.52.0
+    profiles: ["monitoring"]
     user: "0"
     depends_on:
       - app
@@ -110,6 +115,7 @@ services:
 
   grafana:
     image: grafana/grafana:13.0.1
+    profiles: ["monitoring"]
     user: "0"
     ports:
       - "127.0.0.1:3000:3000"
