@@ -63,7 +63,7 @@ public class AuthTokenServiceImpl implements AuthTokenService{
      * @return {@link AuthTokenResponse} containing the JWT access token and refresh token.
      * @throws AuthenticationTokenException if the username is not found.
      * @throws AccountExpiredException if the employee account is disabled.
-     * @throws BadCredentialsExceptsion if the password verification fails.
+     * @throws BadCredentialsException if the password verification fails.
      */
     @Override
     @ActivityLogger(
