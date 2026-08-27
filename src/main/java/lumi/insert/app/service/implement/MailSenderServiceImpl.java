@@ -125,7 +125,7 @@ public class MailSenderServiceImpl implements MailSenderService {
 
         MimeMessage mimeMessage = sender.createMimeMessage(); 
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true); 
-        helper.setTo("owner@mail.com");
+        helper.setTo("kelvinkho050@gmail.com");
         helper.setFrom("noreply@lumi-insert.my.id");
         helper.setSubject("Products statistics - Daily");
         helper.setText(template, true); 
