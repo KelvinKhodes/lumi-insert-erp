@@ -5,8 +5,9 @@
 </div>
 
 #  Lumi Insert ERP/POS Core Modules  
-###  **Lumi Insert** is an open-source ERP built on Java Spring Boot that aimed for high performance, data scability and full observability system.
+###  **Lumi Insert** is an open-source ERP built on Java Spring Boot that aimed for high performance, data scalability and full observability system.
 ---
+🔗 **Live Demo:** [lumi-insert.my.id](https://lumi-insert.my.id)
 ## 🛠 Tech Stack
 - **Core:** Java 25 LTS, Spring Boot 3.2
 - **Security:** Custom Spring Security with Double Token Strategy (JWT Access Token & HttpOnly Refresh Token)
@@ -16,7 +17,7 @@
   - **Grafana:** Dashboard visualization
   - **Loki:** Centralized log aggregation (JSON format)
   - **Promtail:**  Log fetcher and sender
-- **Scability:**
+- **Scalability:**
   - **RabbitMQ:**   Message broker
   - **Redis (Upcoming):**   Real-time Caching 
 - **Others:**
@@ -28,10 +29,10 @@
 Synchronize related modules when transaction, supply or adjustment occurs. The system ensures high data integrity, where every action (such as a Refund) automatically triggers real-time updates.
 ### 2. Financial Audit Trail And Track
 - Implements Stock Ledger (Stock Card) as the core of product movement flow, this provide a precise snapshot of inventory movement.
-- Implements Spring ENVERS for detailed historical changes, allowing high trail and tracking for every action/update. 
-### 3. Third App Integrate (Email & Storage)
-- Integrate Cloudinary as Scalable Media Storage, easy maintanable and lightweight. 
-- Support to every Mail Gateway(Universal) as Notifications or Updates alert 
+- Implements Spring ENVERS for detailed historical changes, allowing full traceability and audit history for every action/update. 
+### 3. Third-Party Integrations (Email & Storage)
+- Integrate Cloudinary as Scalable Media Storage, easy to maintain and lightweight. 
+- Supports any SMTP-compatible mail gateway as Notifications or Updates alert 
 ### 4. Document Generator
 Features a built-in generator that able to create a templated document such as PDF and XLSX. Converting a data source(Product stats, Transaction, etc) into a related  document.
 ### 5. Task Scheduling
@@ -43,7 +44,7 @@ Applied scheduling to handle operational routines, including:
 - ### ERD
   Check Lumi Insert Full Entity Relation Diagram here: https://dbdiagram.io/d/69e5377e0aa78f6bc10fb8f3
   ![ERD Docs](image/lumi-insert-dbdiagram.png)
-- ### Monitoring (Not Fully Configured)
+- ### Monitoring Access (Local Setup)
   This project implement Full Observability Stack to monitor application health, you can access it from: localhost:3000  (Password set by .env > GF_SECURITY_ADMIN_PASSWORD)
   ![Visual Monitoring](image/admin.lumi-insert-grafana.png)
 - ### Endpoint
