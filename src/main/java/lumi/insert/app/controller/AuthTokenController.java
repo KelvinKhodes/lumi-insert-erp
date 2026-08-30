@@ -1,5 +1,6 @@
 package lumi.insert.app.controller;
   
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +25,8 @@ import lumi.insert.app.controller.wrapper.WebResponse;
 import lumi.insert.app.dto.request.AuthTokenCreateRequest;
 import lumi.insert.app.dto.response.AuthTokenResponse;
 import lumi.insert.app.service.AuthTokenService;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * REST Controller to access authentication services.
@@ -95,10 +98,13 @@ public class AuthTokenController {
         path = "/api/auth/logout"
     )
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    public void deleteAuthAPI(@CookieValue(name = "refreshToken", required = true) String refreshToken, HttpServletResponse response){
+    public void deleteAuthAPI(@CookieValue(name = "refreshToken", required = true) String refreshToken, HttpServletRequest request, HttpServletResponse response){
         log.debug("Delete refresh token request initiated for: {}", refreshToken.substring(0, 5));
 
-        authTokenService.deleteRefreshToken(refreshToken); 
+        String header = request.getHeader("Authorization");
+        String accessToken = header.split("Bearer ")[1];
+
+        authTokenService.deleteRefreshToken(accessToken, refreshToken);
 
         Cookie cookie = new Cookie("refreshToken", null);
         cookie.setPath("/");
