@@ -39,12 +39,12 @@ public class SupplierGetByFilter extends PaginationRequest{
     @Builder.Default
     @Min(value = 0, message = "minTotalItems minimal value is 0")
     @Schema(description = "Minimum number of supplier transaction", example = "0")
-    BigDecimal minTotalTransaction = BigDecimal.valueOf(0);
+    Long minTotalTransaction = 0L;
 
     @Builder.Default
     @Min(value = 0, message = "maxTotalItems minimal value is 0")
     @Schema(description = "Maximum number of supplier transaction", example = "150")
-    BigDecimal maxTotalTransaction = BigDecimal.valueOf(9999999999990L);
+    Long maxTotalTransaction = 9999999999990L;
 
     @Builder.Default
     @Min(value = 0, message = "minGrandTotal minimal value is 0")
@@ -64,7 +64,7 @@ public class SupplierGetByFilter extends PaginationRequest{
     @Builder.Default
     @Min(value = 0, message = "maxTotalUnpaid minimal value is 0")
     @Schema(description = "Maximum paid amount to supplier", example = "100000000")
-    BigDecimal maxTotalPaid = BigDecimal.valueOf(99999999990L);
+    BigDecimal maxTotalPaid = BigDecimal.valueOf(9999999999990L);
 
     @Builder.Default
     @Pattern(regexp = "createdAt|updatedAt|totalTransaction|totalUnpaid|totalPaid|name", message = "check documentation for sortBy specification")
@@ -73,4 +73,30 @@ public class SupplierGetByFilter extends PaginationRequest{
     @Builder.Default
     @Pattern(regexp = "DESC|ASC", message = "check documentation for sortDirection specification")
     String sortDirection = "DESC";
+
+    /**
+     * Raw Condition
+     * condition =
+     *             "&& (#request.getPage == 0 && #request.getSize == 10) " +
+     *             "&& (#request.name == null || #request.name.isEmpty()) && (#request.email == null || #request.email.isEmpty()) " +
+     *             "&& (#request.contact == null || #request.contact.isEmpty()) && #request.isActive == null " +
+     *             "&& #request.minTotalTransaction.compareTo(T(java.math.BigDecimal).ZERO) == 0 " +
+     *             "&& #request.maxTotalTransaction.compareTo(T(java.math.BigDecimal).valueOf(9999990L)) == 0 " +
+     *             "&& #request.minTotalUnpaid.compareTo(T(java.math.BigDecimal).ZERO) == 0 " +
+     *             "&& #request.maxTotalUnpaid.compareTo(T(java.math.BigDecimal).valueOf(9999999999990L)) == 0 " +
+     *             "&& #request.minTotalPaid.compareTo(T(java.math.BigDecimal).ZERO) == 0 " +
+     *             "&& #request.maxTotalPaid.compareTo(T(java.math.BigDecimal).valueOf(9999999999990L)) == 0"
+     * @return boolean of condition
+     */
+    public boolean isForFirstPage(){
+        return (this.getPage() == 0 && this.getSize() == 10  && (this.name == null || this.name.isEmpty())
+            && (this.email == null || this.email.isEmpty())
+            && (this.contact == null || this.contact.isEmpty()) && this.isActive == null
+            && this.minTotalTransaction == 0L
+            && this.maxTotalTransaction == 9999999999990L
+            && this.minTotalUnpaid.compareTo(BigDecimal.ZERO) == 0
+            && this.maxTotalUnpaid.compareTo(BigDecimal.valueOf(9999999999990L)) == 0
+            && this.minTotalPaid.compareTo(BigDecimal.ZERO) == 0
+            && this.maxTotalPaid.compareTo(BigDecimal.valueOf(9999999999990L)) == 0);
+    }
 }
