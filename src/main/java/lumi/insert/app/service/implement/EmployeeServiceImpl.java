@@ -3,8 +3,10 @@ package lumi.insert.app.service.implement;
 import java.io.IOException; 
 import java.util.UUID; 
 
-import org.springframework.beans.factory.annotation.Autowired; 
-import org.springframework.data.domain.Pageable; 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -83,6 +85,9 @@ public class EmployeeServiceImpl implements EmployeeService{
         action = ActivityAction.EMPLOYEE_REGISTERED,
         actionMessage = "New employee registered"
     )
+    @CacheEvict(
+        value = "employees:first-page", allEntries = true
+    )
     public EmployeeResponse createEmployee(EmployeeCreateRequest request) {
         log.info("Creating employee username={}", request.getUsername());
         if(employeeRepository.existsByUsername(request.getUsername())) {
@@ -131,6 +136,11 @@ public class EmployeeServiceImpl implements EmployeeService{
      * @return a {@link Slice} of {@link EmployeeResponse}.
      */
     @Override
+    @Cacheable(
+        value = "employees:first-page",
+        key = "#request.sortBy + '_' + #request.sortDirection + '_' + #request.getSize",
+        condition = "#request.getPage == 0 && #request.getSize == 12"
+    )
     public Slice<EmployeeResponse> getEmployees(PaginationRequest request) {
         log.info("Listing employees page={}, size={}", request.getPage(), request.getSize());
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
@@ -198,6 +208,9 @@ public class EmployeeServiceImpl implements EmployeeService{
         entityName = "employees",
         action = ActivityAction.EMPLOYEE_UPDATED,
         actionMessage = "Employee updated"
+    )
+    @CacheEvict(
+        value = "employees:first-page", allEntries = true
     )
     public EmployeeResponse updateEmployee(UUID id, EmployeeUpdateRequest request) {
         log.info("Updating employee id={}", id);
