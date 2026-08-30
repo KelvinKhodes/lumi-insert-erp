@@ -4,6 +4,10 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -79,6 +83,14 @@ public class ProductServiceImpl implements ProductService {
         entityName = "products",
         action = ActivityAction.PRODUCT_CREATED,
         actionMessage = "New product created"
+    )
+    @Caching(
+        put = {
+            @CachePut(value = "products", key = "#result.id")
+        },
+        evict = {
+            @CacheEvict(value = "products:first-page", allEntries = true)
+        }
     )
     public ProductResponse createProduct(ProductCreateRequest request) {
         log.info("Creating new product with name: {}", request.getName());
@@ -160,6 +172,14 @@ public class ProductServiceImpl implements ProductService {
         action = ActivityAction.PRODUCT_UPDATED,
         actionMessage = "Product updated"
     )
+    @Caching(
+        put = {
+            @CachePut(value = "products", key = "#result.id")
+        },
+        evict = {
+            @CacheEvict(value = "products:first-page", allEntries = true)
+        }
+    )
     public ProductResponse updateProduct(ProductUpdateRequest request) {
         log.info("Updating product with ID: {}", request.getId());
         Product existingProduct = productRepository.findById(request.getId()).orElseThrow(() -> {
@@ -218,6 +238,7 @@ public class ProductServiceImpl implements ProductService {
      * @return the found {@link ProductResponse}.
      */
     @Override
+    @Cacheable(value = "products", key = "#id")
     public ProductResponse getProductById(Long id) {
         log.debug("Getting product by ID: {}", id);
         Product searchedProduct = productRepository.findById(id).orElseThrow(() -> {
@@ -256,13 +277,21 @@ public class ProductServiceImpl implements ProductService {
      * @throws NotFoundEntityException if a category filter is provided but the category doesn't exist.
      */
     @Override
+    @Cacheable(
+        value = "products:first-page",
+        key = "#request.sortBy + '_' + #request.sortDirection + '_' + #request.getSize",
+        condition = "#request.categoryId == null " +
+            "&& (#request.getPage == 0 && (#request.getSize == 10 || #request.getSize == 5)) " +
+            "&& (#request.name == null || #request.name.isEmpty()) " +
+            "&& (#request.minPrice == null || #request.minPrice.compareTo(T(java.math.BigDecimal).ZERO) == 0) " +
+            "&& (#request.maxPrice == null || #request.maxPrice.compareTo(T(java.math.BigDecimal).valueOf(50000000L)) == 0)"
+    )
     public Slice<ProductResponse> getProductsByRequests(ProductGetByFilter request) {
         log.debug("Searching products by filter: {}", request);
         if(request.getCategoryId() != null && !(categoryRepository.existsById(request.getCategoryId()))){
             log.debug("Category filter ID not found: {}", request.getCategoryId());
             throw new NotFoundEntityException("Category with ID " + request.getCategoryId() + " was not found");
         }
-
         Pageable pageable = jpaSpecGenerator.pageable(request);
         Specification<Product> productSpecification = jpaSpecGenerator.productSpecification(request);
 
@@ -284,6 +313,12 @@ public class ProductServiceImpl implements ProductService {
         entityName = "products",
         action = ActivityAction.PRODUCT_UPDATED,
         actionMessage = "Product set to inactive"
+    )
+    @Caching(
+        evict = {
+            @CacheEvict(value = "products:first-page", allEntries = true),
+            @CacheEvict(value = "products", key = "#id")
+        }
     )
     public ProductDeleteResponse deactivateProduct(Long id) {
         log.info("Deactivating product with ID: {}", id);
@@ -323,6 +358,12 @@ public class ProductServiceImpl implements ProductService {
         entityName = "products",
         action = ActivityAction.PRODUCT_UPDATED,
         actionMessage = "Product set to active"
+    )
+    @Caching(
+        evict = {
+            @CacheEvict(value = "products:first-page", allEntries = true),
+            @CacheEvict(value = "products", key = "#id")
+        }
     )
     public ProductDeleteResponse activateProduct(Long id) {
         log.info("Activating product with ID: {}", id);
