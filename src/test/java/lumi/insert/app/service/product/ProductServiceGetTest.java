@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq; 
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,10 +15,12 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional; 
+import java.util.Optional;
 
+import lumi.insert.app.dto.request.ProductCreateRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -35,6 +37,9 @@ import lumi.insert.app.dto.response.ProductName;
 import lumi.insert.app.dto.response.ProductResponse;
 import lumi.insert.app.dto.response.ProductStockResponse;
 import lumi.insert.app.exception.NotFoundEntityException;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.test.context.TestPropertySource;
+
 
 public class ProductServiceGetTest extends BaseProductServiceTest{
     
@@ -317,6 +322,83 @@ public class ProductServiceGetTest extends BaseProductServiceTest{
         List<ProductOutOfStock> outOfStockProducts = productServiceMock.getOutOfStockProducts();
         assertEquals(1, outOfStockProducts.size());
     }
+
+    @Test
+    @DisplayName("Should return cached response if data appear, test use different response between cache and db")
+    public void getProductById_foundData_returnCache(){
+      Cache cachedProductResponse = cacheManager.getCache("products");
+
+      ProductResponse mockResponse = ProductResponse.builder()
+          .id(1L)
+          .name("Shoes")
+          .build();
+
+      cachedProductResponse.put(mockResponse.id(), mockResponse);
+
+      ProductResponse product = productService.getProductById(mockResponse.id());
+      assertEquals(product.name(), mockResponse.name());
+
+    }
+
+  @Test
+  @DisplayName("Should return cached response if data appear")
+  void getProducts_whenConditionMet_shouldReturnFromCache() {
+
+    ProductGetByFilter request = ProductGetByFilter.builder()
+        .sortBy("name")
+        .sortDirection("ASC")
+        .page(0)
+        .size(10)
+        .categoryId(null)
+        .name(null)
+        .minPrice(BigDecimal.ZERO)
+        .maxPrice(BigDecimal.valueOf(50000000))
+        .build();
+
+
+    String cacheKey = "name_ASC_10";
+
+    Cache cachedProducts = cacheManager.getCache("products:first-page");
+    assertNotNull(cachedProducts);
+
+    List<ProductResponse> mockResponseList = List.of(
+        ProductResponse.builder()
+            .id(1L)
+            .name("Shoes")
+            .build()
+    );
+
+    cachedProducts.put(cacheKey, new SliceImpl<>(mockResponseList));
+
+    Slice<ProductResponse> products = productService.getProductsByRequests(request);
+    assertNotNull(products);
+    assertEquals("Shoes", products.getContent().getFirst().name());
+    assertEquals(1, products.getSize());
+
+
+  }
+
+  @Test
+  @DisplayName("Should be hit the database because cache condition not meet")
+  void getProducts_whenConditionNotMet_shouldHitRepository() {
+
+    ProductGetByFilter request = ProductGetByFilter.builder()
+        .sortBy("name")
+        .sortDirection("ASC")
+        .page(1)
+        .size(10)
+        .categoryId(null)
+        .name(null)
+        .minPrice(BigDecimal.ZERO)
+        .maxPrice(BigDecimal.valueOf(50000000))
+        .build();
+
+    Slice<ProductResponse> products = productService.getProductsByRequests(request);
+
+    assertTrue(products.isEmpty());
+  }
+
+
 
 
 }

@@ -18,6 +18,7 @@ import lumi.insert.app.dto.request.ProductCreateRequest;
 import lumi.insert.app.dto.response.ProductResponse;
 import lumi.insert.app.exception.DuplicateEntityException;
 import lumi.insert.app.exception.NotFoundEntityException;
+import org.springframework.cache.Cache;
 
 public class ProductServiceCreateTest extends BaseProductServiceTest{
     
@@ -82,5 +83,37 @@ public class ProductServiceCreateTest extends BaseProductServiceTest{
         when(categoryRepositoryMock.findById(12L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundEntityException.class, () -> productServiceMock.createProduct(productCreateRequest));
+    }
+
+    @Test
+    @DisplayName("Should put cache after product created")
+    public void createProduct_putCache_returnCache(){
+        Cache cachedProductResponse = cacheManager.getCache("products");
+        Cache cachedProductFirstPage = cacheManager.getCache("products:first-page");
+
+        ProductResponse mockResponse = ProductResponse.builder()
+            .id(1L)
+            .name("Shoes")
+            .build();
+
+        cachedProductResponse.put(mockResponse.id(), mockResponse);
+        cachedProductFirstPage.put("random", "random");
+
+        ProductCreateRequest request = ProductCreateRequest.builder()
+            .name("Shirt")
+            .basePrice(BigDecimal.ZERO)
+            .sellPrice(BigDecimal.ZERO)
+            .stockMinimum(BigDecimal.ZERO)
+            .stockQuantity(BigDecimal.ZERO)
+            .build();
+
+        ProductResponse product = productService.createProduct(request);
+
+        assertNotNull(cachedProductResponse.get(product.getId()));
+        ProductResponse cached = (ProductResponse) cachedProductResponse.get(product.getId()).get();
+
+        assertEquals(product.name(), cached.name());
+        assertNull(cachedProductFirstPage.get("random"));
+
     }
 }
