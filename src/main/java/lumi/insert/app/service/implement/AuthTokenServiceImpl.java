@@ -3,9 +3,11 @@ package lumi.insert.app.service.implement;
 import java.time.LocalDateTime; 
 import java.time.temporal.ChronoUnit; 
 import java.util.UUID;
- 
+import java.util.concurrent.TimeUnit;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.BadCredentialsException; 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -54,6 +56,10 @@ public class AuthTokenServiceImpl implements AuthTokenService{
 
     @Autowired
     JwtUtils jwtUtils;
+
+    @Autowired
+    RedisTemplate<String, Object> redisTemplate;
+
 
     /**
      * Authenticates an employee and issues a new session.
@@ -150,9 +156,11 @@ public class AuthTokenServiceImpl implements AuthTokenService{
         actionMessage = "Employee logout",
         entityIdFromSingleParam = true
     )
-    public void deleteRefreshToken(String refreshToken) {
+    public void deleteRefreshToken(String accessToken, String refreshToken) {
         log.info("Deleting refresh token={}", refreshToken);
         authTokenRepository.deleteByRefreshToken(refreshToken);
+        redisTemplate.opsForValue().set("blacklist::" + accessToken, true);
+        redisTemplate.expire("blacklist::" + accessToken, 15, TimeUnit.MINUTES);
     }
     
 }

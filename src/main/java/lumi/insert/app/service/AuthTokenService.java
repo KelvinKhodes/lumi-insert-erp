@@ -9,6 +9,6 @@ public interface AuthTokenService {
 
     AuthTokenResponse refreshAuthToken(String refreshToken);
 
-    void deleteRefreshToken(String refreshToken);
+    void deleteRefreshToken(String accessToken, String refreshToken);
     
 }
