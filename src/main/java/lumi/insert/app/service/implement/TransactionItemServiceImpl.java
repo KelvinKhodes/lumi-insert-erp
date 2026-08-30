@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -382,16 +383,20 @@ public class TransactionItemServiceImpl implements TransactionItemService{
      * Retrieves product statistic base on transaction item mapping.
      *
      * @param startDate transaction fetch start date. 
-     * @param startDate transaction fetch end date. 
+     * @param endDate transaction fetch end date.
      * @return {@link TransactionItemStatisticResponse}.
      */
     @Override
+    @Cacheable(
+        value = "products-stats",
+        key = "#startDate.getDayOfMonth() + '_' + #endDate.getDayOfMonth()",
+        condition = "#startDate.getHour() == 0 && #startDate.getMinute() == 0 && #startDate.getSecond() == 0 && #endDate.getHour() == 23 && #endDate.getMinute() == 59 && #endDate.getSecond() == 59"
+    )
     public TransactionItemStatisticResponse getTransactionItemStats(LocalDateTime startDate, LocalDateTime endDate) { 
         log.info("Gathering transaction item stats from {} to {}", startDate, endDate);
         List<ProductSale> productTopSales = transactionItemRepository.getProductTopSales(startDate, endDate);
         List<ProductRefund> productTopRefunds  = transactionItemRepository.getProductTopRefund(startDate, endDate);
-
         return TransactionItemStatisticResponse.builder().productSales(productTopSales).productRefunds(productTopRefunds).build();
     }
-    
+
 }
