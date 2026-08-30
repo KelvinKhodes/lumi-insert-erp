@@ -20,6 +20,7 @@ services:
     depends_on:
       - database
       - rabbit-mq
+      - redis
     volumes:
       - ./logs:/app/logs
       - maven-cache:/root/.m2
@@ -140,6 +141,23 @@ services:
           memory: 500M
         reservations:
           memory: 150M
+
+  redis:
+    image: redis:8-alpine
+    container_name: redis
+    restart: always
+    volumes:
+      - ./redis.conf:/etc/redis/redis.conf:ro
+      - cache:/data
+    command: sh -c "redis-server /etc/redis/redis.conf --requirepass $${REDIS_PASSWORD}"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          memory: 128M
+
 
 volumes:
   maven-cache:
