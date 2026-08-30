@@ -6,7 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID; 
 
-import org.springframework.beans.factory.annotation.Autowired; 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -87,6 +91,14 @@ public class CustomerServiceImpl implements CustomerService{
         action = ActivityAction.CUSTOMER_REGISTERED,
         actionMessage = "New customer registered"
     )
+    @Caching(
+        put = {
+            @CachePut(value = "customers", key = "#result.id")
+        },
+        evict = {
+            @CacheEvict(value = "customers:first-page", allEntries = true)
+        }
+    )
     public CustomerDetailResponse createCustomer(CustomerCreateRequest request) {
         log.info("Creating customer with name: {}", request.getName());
 
@@ -120,6 +132,7 @@ public class CustomerServiceImpl implements CustomerService{
      * @throws NotFoundEntityException if no customer matches the provided UUID.
      */
     @Override
+    @Cacheable(value = "customers", key = "#id")
     public CustomerDetailResponse getCustomer(UUID id) {
         log.debug("Getting customer by ID: {}", id);
 
@@ -143,6 +156,11 @@ public class CustomerServiceImpl implements CustomerService{
      * @return a {@link Slice} of customer summaries.
      */
     @Override
+    @Cacheable(
+        value = "customers:first-page",
+        key = "#request.sortBy + '_' + #request.sortDirection + '_' + #request.getSize",
+        condition = "#request.isForFirstPage()"
+    )
     public Slice<CustomerResponse> getCustomers(CustomerGetByFilter request) {
         log.debug("Getting customers with filter - page: {}, size: {}, name: {}", request.getPage(), request.getSize(), request.getName());
 
@@ -196,6 +214,14 @@ public class CustomerServiceImpl implements CustomerService{
         action = ActivityAction.CUSTOMER_UPDATED,
         actionMessage = "Customer updated"
     )
+    @Caching(
+        put = {
+            @CachePut(value = "customers", key = "#result.id")
+        },
+        evict = {
+            @CacheEvict(value = "customers:first-page", allEntries = true)
+        }
+    )
     public CustomerDetailResponse updateCustomer(UUID id, CustomerUpdateRequest request) {
         log.info("Updating customer with ID: {}", id);
 
@@ -236,6 +262,11 @@ public class CustomerServiceImpl implements CustomerService{
      * @throws DatabaseInternalException if persistence fails, triggering the cleanup process.
      */
     @Override
+    @Caching(
+        evict = {
+            @CacheEvict(value = "customers", key = "#id")
+        }
+    )
     public Boolean addCustomerPicture(UUID id, MultipartFile[] files) {
         log.info("Adding pictures to customer with ID: {}, file count: {}", id, files.length);
 
