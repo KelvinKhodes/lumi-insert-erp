@@ -49,4 +49,26 @@ public class TransactionPaymentGetByFilter extends PaginationRequest{
     @Pattern(regexp = "DESC|ASC", message = "check documentation for sortDirection specification")
     String sortDirection = "DESC";
 
+    /**
+     * Raw Condition
+     * condition =
+     *             "&& (#request.getPage == 0 && #request.getSize == 10) " +
+     *             "&& (#request.name == null || #request.name.isEmpty()) && (#request.email == null || #request.email.isEmpty()) " +
+     *             "&& (#request.contact == null || #request.contact.isEmpty()) && #request.isActive == null " +
+     *             "&& #request.minTotalTransaction.compareTo(T(java.math.BigDecimal).ZERO) == 0 " +
+     *             "&& #request.maxTotalTransaction.compareTo(T(java.math.BigDecimal).valueOf(9999990L)) == 0 " +
+     *             "&& #request.minTotalUnpaid.compareTo(T(java.math.BigDecimal).ZERO) == 0 " +
+     *             "&& #request.maxTotalUnpaid.compareTo(T(java.math.BigDecimal).valueOf(9999999999990L)) == 0 " +
+     *             "&& #request.minTotalPaid.compareTo(T(java.math.BigDecimal).ZERO) == 0 " +
+     *             "&& #request.maxTotalPaid.compareTo(T(java.math.BigDecimal).valueOf(9999999999990L)) == 0"
+     * @return boolean of condition
+     */
+    public boolean isForDashboard(){
+        return (this.getPage() == 0 && this.getSize() == 10
+            && this.transactionId == null
+            && this.minTotalPayment.compareTo(BigDecimal.ZERO) == 0
+            && this.maxTotalPayment.compareTo(BigDecimal.valueOf(9999999999990L)) == 0
+            && this.minCreatedAt == null
+            && this.maxCreatedAt== null);
+    }
 }
