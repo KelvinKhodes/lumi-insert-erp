@@ -1,11 +1,13 @@
 package lumi.insert.app.service.category;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.context.ActiveProfiles;
 
 import jakarta.transaction.Transactional;
@@ -34,5 +36,15 @@ public abstract class BaseCategoryServiceTest extends TestContainerTest{
 
     @Autowired
     CategoryService categoryService;
+
+    @Autowired
+    CacheManager cacheManager;
+
+    @BeforeEach
+    void setUp() {
+        if (cacheManager.getCache("categories:first-page") != null) {
+            cacheManager.getCache("categories:first-page").clear();
+        }
+    }
 
 }

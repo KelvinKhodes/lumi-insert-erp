@@ -1,12 +1,12 @@
 package lumi.insert.app.service.category;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
+import lumi.insert.app.dto.request.CategoryCreateRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +16,7 @@ import lumi.insert.app.dto.response.CategoryResponse;
 import lumi.insert.app.exception.BoilerplateRequestException;
 import lumi.insert.app.exception.DuplicateEntityException;
 import lumi.insert.app.exception.NotFoundEntityException;
+import org.springframework.cache.Cache;
 
 public class CategoryServiceEditTest extends BaseCategoryServiceTest {
     
@@ -164,6 +165,63 @@ public class CategoryServiceEditTest extends BaseCategoryServiceTest {
         when(categoryRepositoryMock.findById(1L)).thenReturn(Optional.of(mockCategory));
 
         assertThrows(BoilerplateRequestException.class, () -> categoryServiceMock.deactivateCategory(1L));
+    }
+
+    @Test
+    @DisplayName("Should evict categories cache when update a category")
+    public void updateCategory_evictCache(){
+        Cache cachedCategories = cacheManager.getCache("categories:first-page");
+
+        cachedCategories.put("random", "random");
+
+        Category smartpho = categoryRepository.save(Category.builder().name("Smartpho").build());
+
+        CategoryUpdateRequest request = CategoryUpdateRequest.builder()
+            .id(smartpho.getId())
+            .name("Smartphone")
+            .build();
+
+        categoryService.updateCategoryName(request);
+        assertNull(cachedCategories.get("random"));
+    }
+
+    @Test
+    @DisplayName("Should evict categories cache when update a category")
+    public void deactivateCategory_evictCache(){
+        Cache cachedCategories = cacheManager.getCache("categories:first-page");
+
+        cachedCategories.put("random", "random");
+
+        Category smartpho = categoryRepository.save(Category.builder().name("Smartpho").build());
+
+        categoryService.deactivateCategory(smartpho.getId());
+        assertNull(cachedCategories.get("random"));
+    }
+
+    @Test
+    @DisplayName("Should evict categories cache when update a category")
+    public void activateCategory_evictCache(){
+        Cache cachedCategories = cacheManager.getCache("categories:first-page");
+
+        cachedCategories.put("random", "random");
+
+        Category smartpho = categoryRepository.save(Category.builder().isActive(false).name("Smartpho").build());
+
+        categoryService.activateCategory(smartpho.getId());
+        assertNull(cachedCategories.get("random"));
+    }
+
+    @Test
+    @DisplayName("Shouldn't evict categories cache when throw exception")
+    public void activateCategory_throw_wontEvictCache(){
+        Cache cachedCategories = cacheManager.getCache("categories:first-page");
+
+        cachedCategories.put("random", "random");
+
+        Category smartpho = categoryRepository.save(Category.builder().isActive(false).name("Smartpho").build());
+
+        assertThrows(BoilerplateRequestException.class, () -> categoryService.deactivateCategory(smartpho.getId()));
+        assertNotNull(cachedCategories.get("random"));
     }
 
 }
