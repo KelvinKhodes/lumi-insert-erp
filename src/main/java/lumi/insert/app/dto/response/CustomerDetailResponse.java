@@ -1,10 +1,14 @@
 package lumi.insert.app.dto.response;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 @Schema(description = "Detailed profile of a customer including contact information and transaction history summary")
 public record CustomerDetailResponse(
     
@@ -44,7 +48,7 @@ public record CustomerDetailResponse(
     @Schema(description = "Pictures url that represent and desribe the customer")
     List<String> pictureUrl
 
-    )  implements Identifiable {
+    )  implements Identifiable, Serializable {
 
     @Override
     public String getId() {
