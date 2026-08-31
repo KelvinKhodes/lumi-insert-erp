@@ -75,7 +75,7 @@ public class SupplierControllerGetTest extends BaseSupplierControllerTest{
     @Test
     void getSuppliers_noFilterFoundEntity_returnOKAndListDTO() throws Exception{
         
-        when(supplierService.getSuppliers(any(SupplierGetByFilter.class))).thenReturn(sliceSupplierResponse);
+        when(supplierService.getSuppliers(any(SupplierGetByFilter.class))).thenReturn(new SliceIndex<>(sliceSupplierResponse));
 
         mockMvc.perform(
             get("/api/suppliers" )
@@ -93,7 +93,7 @@ public class SupplierControllerGetTest extends BaseSupplierControllerTest{
     @Test
     void getSuppliers_FilterFoundEntity_returnOKAndListDTO() throws Exception{
         
-        when(supplierService.getSuppliers(any(SupplierGetByFilter.class))).thenReturn(sliceSupplierResponse);
+        when(supplierService.getSuppliers(any(SupplierGetByFilter.class))).thenReturn(new SliceIndex<>(sliceSupplierResponse));
 
         mockMvc.perform(
             get("/api/suppliers?name=test ger" )
@@ -110,7 +110,7 @@ public class SupplierControllerGetTest extends BaseSupplierControllerTest{
 
     @Test
     void getSuppliers_FilterNotFound_returnEmptyList() throws Exception{
-        when(supplierService.getSuppliers(any(SupplierGetByFilter.class))).thenReturn(new SliceImpl<SupplierDetailResponse>(List.of()));
+        when(supplierService.getSuppliers(any(SupplierGetByFilter.class))).thenReturn(new SliceIndex<>(new SliceImpl<SupplierDetailResponse>(List.of())));
 
         mockMvc.perform(
             get("/api/suppliers?email=ajak12@gmail.com" )

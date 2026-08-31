@@ -140,7 +140,7 @@ public class ProductControllerGetTest extends BaseProductControllerTest{
         Slice<Product> mockSliceProduct = ProductUtils.getMockSliceProduct();
         Slice<ProductResponse> map = mockSliceProduct.map(productMapper::createDtoResponseFromProduct);
 
-        when(productService.getProductsByRequests(any())).thenReturn(map);
+        when(productService.getProductsByRequests(any())).thenReturn(new SliceIndex<>(map));
 
         mockMvc.perform(
             get("/api/products/filter?name=Pro&maxPrice=100000&sortBy=sellPrice")

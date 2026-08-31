@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.UUID;
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Slice;
@@ -97,7 +98,7 @@ public class EmployeeControllerGetTest extends BaseEmployeeControllerTest{
     @DisplayName("should return Slice employee entity with status OK when entity found")
     public void getEmployeesAPI_valid_shouldReturnSliceEntity() throws Exception{
         Slice<EmployeeResponse> slice = new SliceImpl<>(List.of(employeeResponse));
-        when(employeeService.getEmployees(any(PaginationRequest.class))).thenReturn(slice);
+        when(employeeService.getEmployees(any(PaginationRequest.class))).thenReturn(new SliceIndex<>(slice));
 
         mockMvc.perform(
             get("/api/employees") 
@@ -115,7 +116,7 @@ public class EmployeeControllerGetTest extends BaseEmployeeControllerTest{
     @DisplayName("should return Slice employee entity with status OK when entity found")
     public void getEmployeesAPI_noData_shouldReturnSliceEntity() throws Exception{
         Slice<EmployeeResponse> slice = new SliceImpl<>(List.of());
-        when(employeeService.getEmployees(any(PaginationRequest.class))).thenReturn(slice);
+        when(employeeService.getEmployees(any(PaginationRequest.class))).thenReturn(new SliceIndex<>(slice));
 
         mockMvc.perform(
             get("/api/employees?size=5") 

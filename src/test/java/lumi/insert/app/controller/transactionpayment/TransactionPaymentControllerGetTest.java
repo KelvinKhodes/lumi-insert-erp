@@ -10,7 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.util.List;
- 
+
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Slice;
@@ -109,7 +110,7 @@ public class TransactionPaymentControllerGetTest extends BaseTransactionPaymentC
     @DisplayName("Should return slice of transactionPayment DTO when transaction found/valid")
     void searchTransactionPaymentsFilterAPI_validRequest_shouldReturnSliceEntityDTO() throws Exception{
         Slice<TransactionPaymentResponse> slice = new SliceImpl<TransactionPaymentResponse>(List.of(transactionPaymentResponse));
-        when(transactionPaymentService.getTransactionPaymentsByRequests(TransactionPaymentGetByFilter.builder().transactionId(transactionPaymentResponse.transactionId()).minTotalPayment(BigDecimal.valueOf(5000L)).build())).thenReturn(slice);
+        when(transactionPaymentService.getTransactionPaymentsByRequests(TransactionPaymentGetByFilter.builder().transactionId(transactionPaymentResponse.transactionId()).minTotalPayment(BigDecimal.valueOf(5000L)).build())).thenReturn(new SliceIndex<>(slice));
 
         mockMvc.perform(
             get("/api/transactions/" + transactionPaymentResponse.transactionId() + "/payments/filter?minTotalPayment=5000")
@@ -126,7 +127,7 @@ public class TransactionPaymentControllerGetTest extends BaseTransactionPaymentC
     @DisplayName("Should return error missmatch when request param type missmatch")
     void searchTransactionPaymentsFilterAPI_missmatchParam_shouldReturnSliceEntityDTO() throws Exception{
         Slice<TransactionPaymentResponse> slice = new SliceImpl<TransactionPaymentResponse>(List.of(transactionPaymentResponse));
-        when(transactionPaymentService.getTransactionPaymentsByRequests(TransactionPaymentGetByFilter.builder().transactionId(transactionPaymentResponse.transactionId()).minTotalPayment(BigDecimal.valueOf(5000L)).build())).thenReturn(slice);
+        when(transactionPaymentService.getTransactionPaymentsByRequests(TransactionPaymentGetByFilter.builder().transactionId(transactionPaymentResponse.transactionId()).minTotalPayment(BigDecimal.valueOf(5000L)).build())).thenReturn(new SliceIndex<>(slice));
 
         mockMvc.perform(
             get("/api/transactions/" + transactionPaymentResponse.transactionId() + "/payments/filter?minTotalPayment=true")
@@ -141,7 +142,7 @@ public class TransactionPaymentControllerGetTest extends BaseTransactionPaymentC
     @DisplayName("Should return error badrequest  when param filter totalpayment is lower than 0")
     void searchTransactionPaymentsFilterAPI_minTotalPaymentMinus_shouldReturnSliceEntityDTO() throws Exception{
         Slice<TransactionPaymentResponse> slice = new SliceImpl<TransactionPaymentResponse>(List.of(transactionPaymentResponse));
-        when(transactionPaymentService.getTransactionPaymentsByRequests(TransactionPaymentGetByFilter.builder().transactionId(transactionPaymentResponse.transactionId()).minTotalPayment(BigDecimal.valueOf(5000L)).build())).thenReturn(slice);
+        when(transactionPaymentService.getTransactionPaymentsByRequests(TransactionPaymentGetByFilter.builder().transactionId(transactionPaymentResponse.transactionId()).minTotalPayment(BigDecimal.valueOf(5000L)).build())).thenReturn(new SliceIndex<>(slice));
 
         mockMvc.perform(
             get("/api/transactions/" + transactionPaymentResponse.transactionId() + "/payments/filter?minTotalPayment=-5000")
@@ -156,7 +157,7 @@ public class TransactionPaymentControllerGetTest extends BaseTransactionPaymentC
     @DisplayName("Should return error badrequest  when param filter totalpayment is lower than 0")
     void searchTransactionPaymentsFilterAPI_wrongSortByValue_shouldReturnSliceEntityDTO() throws Exception{
         Slice<TransactionPaymentResponse> slice = new SliceImpl<TransactionPaymentResponse>(List.of(transactionPaymentResponse));
-        when(transactionPaymentService.getTransactionPaymentsByRequests(TransactionPaymentGetByFilter.builder().transactionId(transactionPaymentResponse.transactionId()).minTotalPayment(BigDecimal.valueOf(5000L)).build())).thenReturn(slice);
+        when(transactionPaymentService.getTransactionPaymentsByRequests(TransactionPaymentGetByFilter.builder().transactionId(transactionPaymentResponse.transactionId()).minTotalPayment(BigDecimal.valueOf(5000L)).build())).thenReturn(new SliceIndex<>(slice));
 
         mockMvc.perform(
             get("/api/transactions/" + transactionPaymentResponse.transactionId() + "/payments/filter?minTotalPayment=5000&sortBy=cc")
