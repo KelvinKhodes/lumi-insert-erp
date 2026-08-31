@@ -69,13 +69,17 @@ public class RedisConfig {
     GenericJacksonJsonRedisSerializer genericJacksonJsonRedisSerializer = new GenericJacksonJsonRedisSerializer(mapper);
 
     RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
-        .entryTtl(Duration.ofHours(1))
+        .entryTtl(Duration.ofMinutes(30))
         .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
         .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(genericJacksonJsonRedisSerializer))
         .disableCachingNullValues();
 
     Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = Map.of(
-        "products:first-page", redisCacheConfiguration.entryTtl(Duration.ofMinutes(15))
+        "products:first-page", redisCacheConfiguration.entryTtl(Duration.ofMinutes(10)),
+        "categories:first-page", redisCacheConfiguration.entryTtl(Duration.ofMinutes(10)),
+        "suppliers:first-page", redisCacheConfiguration.entryTtl(Duration.ofMinutes(10)),
+        "payments:first-page", redisCacheConfiguration.entryTtl(Duration.ofMinutes(10)),
+        "customers:first-page", redisCacheConfiguration.entryTtl(Duration.ofMinutes(10))
     );
 
     return RedisCacheManager.builder(redisConnectionFactory)
