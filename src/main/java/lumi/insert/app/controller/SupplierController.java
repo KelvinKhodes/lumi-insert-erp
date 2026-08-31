@@ -106,11 +106,11 @@ public class SupplierController {
         path = "/api/suppliers",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    ResponseEntity<WebResponse<Slice<SupplierDetailResponse>>> getSuppliersAPI(@Valid @ModelAttribute SupplierGetByFilter request){ 
+    ResponseEntity<WebResponse<SliceIndex<SupplierDetailResponse>>> getSuppliersAPI(@Valid @ModelAttribute SupplierGetByFilter request){
         log.debug("Suppliers search request: {}", request);
-        Slice<SupplierDetailResponse> resultFromService = supplierService.getSuppliers(request);
+        SliceIndex<SupplierDetailResponse> resultFromService = supplierService.getSuppliers(request);
 
-        WebResponse<Slice<SupplierDetailResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
+        WebResponse<SliceIndex<SupplierDetailResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
  
         log.debug("Suppliers search request result: {}", resultFromService);
         return ResponseEntity.ok(wrappedResult);

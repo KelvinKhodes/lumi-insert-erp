@@ -3,6 +3,7 @@ package lumi.insert.app.controller;
 import java.net.URI;
 import java.util.UUID;
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.MediaType;
@@ -174,12 +175,12 @@ public class TransactionPaymentController {
         path = "/api/transactions/{transactionId}/payments/filter",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    ResponseEntity<WebResponse<Slice<TransactionPaymentResponse>>> searchTransactionPaymentsFilter(@Parameter(description = "Transaction ID") @PathVariable(name = "transactionId") UUID transactionId, @ModelAttribute @Valid TransactionPaymentGetByFilter request){
+    ResponseEntity<WebResponse<SliceIndex<TransactionPaymentResponse>>> searchTransactionPaymentsFilter(@Parameter(description = "Transaction ID") @PathVariable(name = "transactionId") UUID transactionId, @ModelAttribute @Valid TransactionPaymentGetByFilter request){
         log.debug("Transaction payments search request with filter: {}", request);
-        Slice<TransactionPaymentResponse> resultFromService = transactionPaymentService.getTransactionPaymentsByRequests(request);
+        SliceIndex<TransactionPaymentResponse> resultFromService = transactionPaymentService.getTransactionPaymentsByRequests(request);
         log.debug("Transaction payments found: {}", resultFromService);
 
-        WebResponse<Slice<TransactionPaymentResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
+        WebResponse<SliceIndex<TransactionPaymentResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
 
         return ResponseEntity.ok(wrappedResult);
     }
@@ -194,12 +195,12 @@ public class TransactionPaymentController {
         path = "/api/transactions/payments/filter",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    ResponseEntity<WebResponse<Slice<TransactionPaymentResponse>>> searchGlobalTransactionsPaymentsFilter(@ModelAttribute @Valid TransactionPaymentGetByFilter request){
+    ResponseEntity<WebResponse<SliceIndex<TransactionPaymentResponse>>> searchGlobalTransactionsPaymentsFilter(@ModelAttribute @Valid TransactionPaymentGetByFilter request){
         log.debug("Transaction payments search request with filter: {}", request);
-        Slice<TransactionPaymentResponse> resultFromService = transactionPaymentService.getTransactionPaymentsByRequests(request);
+        SliceIndex<TransactionPaymentResponse> resultFromService = transactionPaymentService.getTransactionPaymentsByRequests(request);
         log.debug("Transaction payments found: {}", resultFromService);
 
-        WebResponse<Slice<TransactionPaymentResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
+        WebResponse<SliceIndex<TransactionPaymentResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
 
         return ResponseEntity.ok(wrappedResult);
     }

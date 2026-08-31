@@ -111,11 +111,11 @@ public class ProductController {
         path = "/api/products/filter",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    ResponseEntity<WebResponse<Slice<ProductResponse>>> getProductByFilter(@ModelAttribute @Valid ProductGetByFilter request){
+    ResponseEntity<WebResponse<SliceIndex<ProductResponse>>> getProductByFilter(@ModelAttribute @Valid ProductGetByFilter request){
         log.debug("Product search by filter request: {}", request);
-        Slice<ProductResponse> resultFromService = productService.getProductsByRequests(request);
+        SliceIndex<ProductResponse> resultFromService = productService.getProductsByRequests(request);
 
-        WebResponse<Slice<ProductResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
+        WebResponse<SliceIndex<ProductResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
 
         log.debug("Product search by filter result: {}", resultFromService);
         return ResponseEntity.ok(wrappedResult);   
