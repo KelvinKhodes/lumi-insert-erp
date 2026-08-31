@@ -366,7 +366,7 @@ public class TransactionItemServiceImpl implements TransactionItemService{
     /**
      * Retrieves detailed transaction item by identifier.
      *
-     * @param transactionId the transaction item unique identifier. 
+     * @param id the transaction item unique identifier.
      * @return {@link TransactionItemResponse}.
      */
     @Override

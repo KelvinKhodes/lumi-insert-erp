@@ -18,7 +18,7 @@ public interface SupplierService {
 
     SupplierDetailResponse getSupplier(UUID id);
 
-    Slice<SupplierDetailResponse> getSuppliers(SupplierGetByFilter request);
+    SliceIndex<SupplierDetailResponse> getSuppliers(SupplierGetByFilter request);
 
     SliceIndex<SupplierNameResponse> searchSupplierNames(SupplierGetNameRequest request);
 

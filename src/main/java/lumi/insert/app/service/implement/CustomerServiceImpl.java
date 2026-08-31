@@ -161,7 +161,7 @@ public class CustomerServiceImpl implements CustomerService{
         key = "#request.sortBy + '_' + #request.sortDirection + '_' + #request.getSize",
         condition = "#request.isForFirstPage()"
     )
-    public Slice<CustomerResponse> getCustomers(CustomerGetByFilter request) {
+    public SliceIndex<CustomerResponse> getCustomers(CustomerGetByFilter request) {
         log.debug("Getting customers with filter - page: {}, size: {}, name: {}", request.getPage(), request.getSize(), request.getName());
 
         Pageable pageable = jpaSpec.pageable(request);
@@ -173,7 +173,7 @@ public class CustomerServiceImpl implements CustomerService{
         Slice<CustomerResponse> response = customers.map(customerMapper::createDtoResponseFromEmployee);
         log.debug("Customer responses created, total: {}", response.getNumberOfElements());
 
-        return response;
+        return new SliceIndex<>(response);
     }
 
     /**

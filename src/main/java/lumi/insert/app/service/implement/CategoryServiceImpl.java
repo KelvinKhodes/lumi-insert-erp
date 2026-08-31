@@ -1,6 +1,7 @@
 package lumi.insert.app.service.implement;
  
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import lumi.insert.app.dto.request.CategoryGetRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -207,7 +208,7 @@ public class CategoryServiceImpl implements CategoryService {
         condition = "#request.getPage == 0 && (#request.getSize == 100 || #request.getSize == 12) " +
             "&& #request.isArchived == false"
     )
-    public Slice<CategoryResponse> getCategories(CategoryGetRequest request) {
+    public SliceIndex<CategoryResponse> getCategories(CategoryGetRequest request) {
         log.debug("Getting categories with pagination - page: {}, size: {}", request.getPage(), request.getSize());
 
         Sort sort = Sort.by("name").ascending();
@@ -219,7 +220,7 @@ public class CategoryServiceImpl implements CategoryService {
         Slice<CategoryResponse> response = searchedCategories.map(categoryMapper::createDtoResponseFromCategory);
         log.debug("Category responses created, total: {}", response.getNumberOfElements());
 
-        return response;
+        return new SliceIndex<CategoryResponse>(response);
     }
     
 }

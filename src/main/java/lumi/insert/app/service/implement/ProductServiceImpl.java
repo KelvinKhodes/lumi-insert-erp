@@ -286,7 +286,7 @@ public class ProductServiceImpl implements ProductService {
             "&& (#request.minPrice == null || #request.minPrice.compareTo(T(java.math.BigDecimal).ZERO) == 0) " +
             "&& (#request.maxPrice == null || #request.maxPrice.compareTo(T(java.math.BigDecimal).valueOf(50000000L)) == 0)"
     )
-    public Slice<ProductResponse> getProductsByRequests(ProductGetByFilter request) {
+    public SliceIndex<ProductResponse> getProductsByRequests(ProductGetByFilter request) {
         log.debug("Searching products by filter: {}", request);
         if(request.getCategoryId() != null && !(categoryRepository.existsById(request.getCategoryId()))){
             log.debug("Category filter ID not found: {}", request.getCategoryId());
@@ -298,7 +298,7 @@ public class ProductServiceImpl implements ProductService {
         Slice<Product> result = productRepository.findAll(productSpecification, pageable);
         log.debug("Found {} filtered products", result.getNumberOfElements());
         Slice<ProductResponse> resultMap = result.map(productMapper::createDtoResponseFromProduct);
-        return resultMap;
+        return new SliceIndex<>(resultMap);
     }
 
     /**

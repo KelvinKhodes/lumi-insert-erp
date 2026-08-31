@@ -1,7 +1,8 @@
 package lumi.insert.app.service;
 
 import java.util.UUID;
- 
+
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import org.springframework.data.domain.Slice;
 
 import lumi.insert.app.dto.request.PaginationRequest;
@@ -17,7 +18,7 @@ public interface TransactionPaymentService {
 
     TransactionPaymentResponse getTransactionPayment(UUID id);
 
-    Slice<TransactionPaymentResponse> getTransactionPaymentsByRequests(TransactionPaymentGetByFilter request);
+    SliceIndex<TransactionPaymentResponse> getTransactionPaymentsByRequests(TransactionPaymentGetByFilter request);
 
     TransactionPaymentResponse refundTransactionPayment(UUID id, TransactionPaymentCreateRequest request);
 

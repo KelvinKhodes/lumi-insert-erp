@@ -31,7 +31,7 @@ public interface ProductService {
 
     Slice<ProductResponse> getProducts(PaginationRequest request);
 
-    Slice<ProductResponse> getProductsByRequests(ProductGetByFilter request);
+    SliceIndex<ProductResponse> getProductsByRequests(ProductGetByFilter request);
 
     ProductDeleteResponse deactivateProduct(Long id);
 

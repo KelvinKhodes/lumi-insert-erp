@@ -7,7 +7,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
- 
+
+import lumi.insert.app.core.entity.nondatabase.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
@@ -29,11 +30,6 @@ import lumi.insert.app.aspect.annotation.ActivityLogger;
 import lumi.insert.app.core.entity.Customer;
 import lumi.insert.app.core.entity.Transaction;
 import lumi.insert.app.core.entity.TransactionPayment;
-import lumi.insert.app.core.entity.nondatabase.ActivityAction;
-import lumi.insert.app.core.entity.nondatabase.EmployeeLogin;
-import lumi.insert.app.core.entity.nondatabase.EntityList;
-import lumi.insert.app.core.entity.nondatabase.TransactionStatus;
-import lumi.insert.app.core.entity.nondatabase.UploadStorageMessage;
 import lumi.insert.app.core.repository.TransactionPaymentRepository;
 import lumi.insert.app.core.repository.TransactionRepository;
 import lumi.insert.app.dto.request.PaginationRequest;
@@ -224,7 +220,7 @@ public class TransactionPaymentServiceImpl implements TransactionPaymentService 
         key = "#request.sortBy + '_' + #request.sortDirection + '_' + #request.getSize",
         condition = "#request.isForDashboard()"
     )
-    public Slice<TransactionPaymentResponse> getTransactionPaymentsByRequests(TransactionPaymentGetByFilter request) {
+    public SliceIndex<TransactionPaymentResponse> getTransactionPaymentsByRequests(TransactionPaymentGetByFilter request) {
         log.info("Searching transaction payments with filters page={}, size={}", request.getPage(), request.getSize());
         Pageable pageable = jpaSpecGenerator.pageable(request);
 
@@ -233,7 +229,7 @@ public class TransactionPaymentServiceImpl implements TransactionPaymentService 
         Slice<TransactionPayment> transactionPayments = transactionPaymentRepository.findAll(specification, pageable);
         Slice<TransactionPaymentResponse> result = transactionPayments.map(allTransactionMapper::createTransactionPaymentResponseDto);
 
-        return result;
+        return new SliceIndex<>(result);
     }
 
     /**

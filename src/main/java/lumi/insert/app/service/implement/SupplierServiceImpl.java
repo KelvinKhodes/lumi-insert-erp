@@ -130,7 +130,7 @@ public class SupplierServiceImpl implements SupplierService{
         key = "#request.sortBy + '_' + #request.sortDirection + '_' + #request.getSize",
         condition = "#request.isForFirstPage()"
     )
-    public Slice<SupplierDetailResponse> getSuppliers(SupplierGetByFilter request) {
+    public SliceIndex<SupplierDetailResponse> getSuppliers(SupplierGetByFilter request) {
         log.debug("Getting suppliers with filter: {}", request);
         Pageable pageable = jpaSpecGenerator.pageable(request);
 
@@ -138,7 +138,9 @@ public class SupplierServiceImpl implements SupplierService{
 
         Slice<Supplier> suppliers = supplierRepository.findAll(supplierSpecification, pageable);
         log.debug("Found {} suppliers", suppliers.getNumberOfElements());
-        return suppliers.map(supplierMapper::createDtoDetailResponseFromSupplier);
+
+        Slice<SupplierDetailResponse> result = suppliers.map(supplierMapper::createDtoDetailResponseFromSupplier);
+        return new SliceIndex<>(result);
     }
 
     /**
