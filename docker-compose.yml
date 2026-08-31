@@ -151,7 +151,7 @@ services:
       - redis-cache:/data
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: sh -c "redis-server /etc/redis/redis.conf --requirepass $REDIS_PASSWORD"
+    command: sh -c "redis-server /etc/redis/redis.conf --requirepass $$REDIS_PASSWORD"
     deploy:
       resources:
         limits:
