@@ -5,6 +5,7 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.Page;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -74,7 +75,7 @@ public class RedisConfig {
         .disableCachingNullValues();
 
     Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = Map.of(
-        "products:first-page", RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(30))
+        "products:first-page", redisCacheConfiguration.entryTtl(Duration.ofMinutes(15))
     );
 
     return RedisCacheManager.builder(redisConnectionFactory)
