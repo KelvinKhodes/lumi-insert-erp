@@ -5,9 +5,13 @@ import java.time.temporal.ChronoUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock; 
-import org.mockito.junit.jupiter.MockitoExtension; 
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -22,6 +26,8 @@ import lumi.insert.app.dto.response.EmployeeResponse;
 import lumi.insert.app.service.implement.AuthTokenServiceImpl;
 import lumi.insert.app.mapper.AuthMapperImpl;
 import lumi.insert.app.utils.security.JwtUtils;
+
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
@@ -45,6 +51,12 @@ public abstract class BaseAuthTokenServiceTest {
     @Mock
     JwtUtils jwtUtils;
 
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    ValueOperations<String, Object> valueOperations;
+
     Employee setupEmployee;
 
     AuthToken setupAuthToken;
@@ -67,6 +79,8 @@ public abstract class BaseAuthTokenServiceTest {
         .expiredAt(LocalDateTime.now().plus(7, ChronoUnit.DAYS))
         .refreshToken(UuidCreator.getTimeOrderedEpochFast().toString())
         .build();
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         authTokenResponse = new AuthTokenResponse("someAccessToken", UuidCreator.getTimeOrderedEpochFast().toString(), new EmployeeResponse(setupEmployee.getId(), setupEmployee.getUsername(), setupEmployee.getFullname(), setupEmployee.getRole(), LocalDateTime.now()), LocalDateTime.now().plusDays(7), null);
     }

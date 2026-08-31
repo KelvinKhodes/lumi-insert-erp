@@ -2,6 +2,7 @@ package lumi.insert.app.controller;
 
 import java.net.URI;
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import lumi.insert.app.dto.request.CategoryGetRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Slice;
@@ -83,11 +84,11 @@ public class CategoryController {
         path = "/api/categories",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    ResponseEntity<WebResponse<Slice<CategoryResponse>>> getCategories(@Valid @ModelAttribute CategoryGetRequest request){
+    ResponseEntity<WebResponse<SliceIndex<CategoryResponse>>> getCategories(@Valid @ModelAttribute CategoryGetRequest request){
         log.debug("Categories search request: {}", request);
-        Slice<CategoryResponse> resultFromService = categoryService.getCategories(request);
+        SliceIndex<CategoryResponse> resultFromService = categoryService.getCategories(request);
 
-        WebResponse<Slice<CategoryResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
+        WebResponse<SliceIndex<CategoryResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
 
         log.debug("Categories search request result: {}", resultFromService);
         return ResponseEntity.ok(wrappedResult);   

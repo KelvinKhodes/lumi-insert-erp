@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Optional;
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
@@ -53,7 +54,7 @@ public class EmployeeServiceGetTest extends BaseEmployeeServiceTest{
         Page<Employee> slice = new PageImpl<Employee>(List.of(setupEmployee));
         when(employeeRepositoryMock.findAll(any(Pageable.class))).thenReturn(slice);
 
-        Slice<EmployeeResponse> employeeDTO = employeeServiceMock.getEmployees(PaginationRequest.builder().build());
+        SliceIndex<EmployeeResponse> employeeDTO = employeeServiceMock.getEmployees(PaginationRequest.builder().build());
         log.info("{}", employeeDTO);
         assertEquals(1, employeeDTO.getNumberOfElements()); 
         assertEquals(setupEmployee.getFullname(), employeeDTO.getContent().getFirst().fullname());
@@ -65,7 +66,7 @@ public class EmployeeServiceGetTest extends BaseEmployeeServiceTest{
     void getEmployees_0data_return0array(){
         when(employeeRepositoryMock.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
-        Slice<EmployeeResponse> employeeDTO = employeeServiceMock.getEmployees(PaginationRequest.builder().build());
+        SliceIndex<EmployeeResponse> employeeDTO = employeeServiceMock.getEmployees(PaginationRequest.builder().build());
         log.info("wer {}", employeeDTO);
         assertEquals(0, employeeDTO.getNumberOfElements()); 
         assertEquals(List.of(), employeeDTO.getContent());

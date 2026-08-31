@@ -3,6 +3,7 @@ package lumi.insert.app.controller;
 import java.net.URI;
 import java.util.UUID;
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.MediaType;
@@ -110,12 +111,12 @@ public class EmployeeController {
         path = "/api/employees",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    ResponseEntity<WebResponse<Slice<EmployeeResponse>>> getEmployeesAPI(@Valid @ModelAttribute PaginationRequest request){
+    ResponseEntity<WebResponse<SliceIndex<EmployeeResponse>>> getEmployeesAPI(@Valid @ModelAttribute PaginationRequest request){
         log.debug("Employees list request: {}", request);
-        
-        Slice<EmployeeResponse> resultFromService = employeeService.getEmployees(request);
 
-        WebResponse<Slice<EmployeeResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
+        SliceIndex<EmployeeResponse> resultFromService = employeeService.getEmployees(request);
+
+        WebResponse<SliceIndex<EmployeeResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
  
         log.debug("Employees list result: {}", resultFromService);
         return ResponseEntity.ok(wrappedResult);

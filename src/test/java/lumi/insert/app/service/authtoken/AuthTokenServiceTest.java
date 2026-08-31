@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -139,9 +140,14 @@ public class AuthTokenServiceTest extends BaseAuthTokenServiceTest{
     @Test
     @DisplayName("Should called deleteByRefreshToken ")
     void deleteAuthToken_verifyCall1Time(){ 
-        authTokenServiceMock.deleteRefreshToken(setupAuthToken.getRefreshToken());
+        authTokenServiceMock.deleteRefreshToken("someAccess", setupAuthToken.getRefreshToken());
 
+        verify(redisTemplate, times(1)).opsForValue();
+        verify(valueOperations, times(1)).set("blacklist::someAccess", true);
+        verify(redisTemplate, times(1)).expire("blacklist::someAccess", 15, TimeUnit.MINUTES);
         verify(authTokenRepository, times(1)).deleteByRefreshToken(argThat(arg -> arg.equals(setupAuthToken.getRefreshToken())));
     }
+
+
 
 }

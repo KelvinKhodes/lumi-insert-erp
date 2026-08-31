@@ -1,7 +1,6 @@
 package lumi.insert.app.controller.authtoken;
  
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify; 
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie; 
@@ -23,17 +22,16 @@ public class AuthTokenControllerDeleteTest extends BaseAuthTokenControllerTest{
     @DisplayName("should return Auth DTO when credentials valid")
     public void deleteAuthAPI_validCookieToken_shouldReturn204() throws Exception{ 
         Cookie cookie = new Cookie("refreshToken", "someRefreshToken");
-
         mockMvc.perform(
             delete("/api/auth/logout")
-            .with(csrf()) 
+            .with(csrf())
             .cookie(cookie)  
         )
         .andDo(print())
         .andExpect(status().isNoContent())
         .andExpect(cookie().exists("refreshToken"))
         .andExpect(cookie().maxAge("refreshToken", 0));
-        verify(authTokenService, times(1)).deleteRefreshToken("someRefreshToken");
+        verify(authTokenService, times(1)).deleteRefreshToken(any(),"someRefreshToken");
     }
 
     @Test

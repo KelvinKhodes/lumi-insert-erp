@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Slice; 
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;

@@ -1,11 +1,12 @@
 package lumi.insert.app.dto.response;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder; 
+import lombok.Builder;
 
 @Builder
 @Schema(description = "Detailed response representing a product in the inventory catalog")
@@ -44,7 +45,7 @@ public record ProductResponse (
     @Schema(description = "Timestamp of the last update to product details or stock")
     LocalDateTime updatedAt
     
-)  implements Identifiable {
+)  implements Identifiable, Serializable {
 
     @Override
     public String getId() {

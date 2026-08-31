@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -71,7 +72,7 @@ public class TransactionPaymentServiceGetTest extends BaseTransactionPaymentServ
         when(jpaSpecGenerator.transactionPaymentSpecification(any())).thenReturn(Specification.anyOf(List.of()));
         when(transactionPaymentRepositoryMock.findAll(ArgumentMatchers.<Specification<TransactionPayment>>any(), any(Pageable.class))).thenReturn(slices);
 
-        Slice<TransactionPaymentResponse> result = transactionPaymentServiceMock.getTransactionPaymentsByRequests(TransactionPaymentGetByFilter.builder().build());
+        SliceIndex<TransactionPaymentResponse> result = transactionPaymentServiceMock.getTransactionPaymentsByRequests(TransactionPaymentGetByFilter.builder().build());
         assertEquals(setupTransactionPayment.getId(), result.getContent().getFirst().id());
         assertTrue(BigDecimal.valueOf(1000L).compareTo(result.getContent().getFirst().totalPayment()) == 0);
         assertEquals(1, result.getNumberOfElements());

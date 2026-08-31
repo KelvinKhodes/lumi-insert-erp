@@ -3,6 +3,8 @@ package lumi.insert.app.service.implement;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -69,6 +71,10 @@ public class SupplierServiceImpl implements SupplierService{
         action = ActivityAction.SUPPLIER_REGISTERED,
         actionMessage = "New supplier registered"
     )
+    @CacheEvict(
+        value = "suppliers:first-page",
+        allEntries = true
+    )
     public SupplierDetailResponse createSupplier(SupplierCreateRequest request) {
         log.info("Creating supplier with name: {}", request.getName());
         if(supplierRepository.existsByName(request.getName())) {
@@ -119,7 +125,12 @@ public class SupplierServiceImpl implements SupplierService{
      * @return a {@link Slice} of supplier profiles.
      */
     @Override
-    public Slice<SupplierDetailResponse> getSuppliers(SupplierGetByFilter request) {
+    @Cacheable(
+        value = "suppliers:first-page",
+        key = "#request.sortBy + '_' + #request.sortDirection + '_' + #request.getSize",
+        condition = "#request.isForFirstPage()"
+    )
+    public SliceIndex<SupplierDetailResponse> getSuppliers(SupplierGetByFilter request) {
         log.debug("Getting suppliers with filter: {}", request);
         Pageable pageable = jpaSpecGenerator.pageable(request);
 
@@ -127,7 +138,9 @@ public class SupplierServiceImpl implements SupplierService{
 
         Slice<Supplier> suppliers = supplierRepository.findAll(supplierSpecification, pageable);
         log.debug("Found {} suppliers", suppliers.getNumberOfElements());
-        return suppliers.map(supplierMapper::createDtoDetailResponseFromSupplier);
+
+        Slice<SupplierDetailResponse> result = suppliers.map(supplierMapper::createDtoDetailResponseFromSupplier);
+        return new SliceIndex<>(result);
     }
 
     /**
@@ -165,6 +178,10 @@ public class SupplierServiceImpl implements SupplierService{
         entityName = "suppliers",
         action = ActivityAction.SUPPLIER_UPDATED,
         actionMessage = "Supplier updated"
+    )
+    @CacheEvict(
+        value = "suppliers:first-page",
+        allEntries = true
     )
     public SupplierDetailResponse updateSupplier(UUID id, SupplierUpdateRequest request) {
         log.info("Updating supplier with ID: {}", id);

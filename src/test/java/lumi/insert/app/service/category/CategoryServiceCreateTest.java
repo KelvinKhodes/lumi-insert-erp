@@ -1,12 +1,13 @@
 package lumi.insert.app.service.category;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import lumi.insert.app.dto.request.ProductCreateRequest;
+import lumi.insert.app.dto.response.ProductResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +15,7 @@ import lumi.insert.app.core.entity.Category;
 import lumi.insert.app.dto.request.CategoryCreateRequest;
 import lumi.insert.app.dto.response.CategoryResponse;
 import lumi.insert.app.exception.DuplicateEntityException;
+import org.springframework.cache.Cache;
 
 public class CategoryServiceCreateTest extends BaseCategoryServiceTest{
 
@@ -61,5 +63,20 @@ public class CategoryServiceCreateTest extends BaseCategoryServiceTest{
         .build();
 
         assertThrows(DuplicateEntityException.class, () -> categoryServiceMock.createCategory(categoryCreateRequest));
+    }
+
+    @Test
+    @DisplayName("Should evict categories cache when create a category")
+    public void createCategory_evictCache(){
+        Cache cachedCategories = cacheManager.getCache("categories:first-page");
+
+        cachedCategories.put("random", "random");
+
+        CategoryCreateRequest request = CategoryCreateRequest.builder()
+            .name("Smartphone")
+            .build();
+
+        categoryService.createCategory(request);
+        assertNull(cachedCategories.get("random"));
     }
 }

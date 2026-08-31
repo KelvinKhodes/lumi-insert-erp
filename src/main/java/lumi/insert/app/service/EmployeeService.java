@@ -2,6 +2,7 @@ package lumi.insert.app.service;
  
 import java.util.UUID;
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import org.springframework.data.domain.Slice;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,7 +17,7 @@ public interface EmployeeService {
 
     EmployeeResponse getEmployee(UUID id);
 
-    Slice<EmployeeResponse> getEmployees(PaginationRequest request);
+    SliceIndex<EmployeeResponse> getEmployees(PaginationRequest request);
 
     boolean isExistsEmployeeByUsername(String username);
 

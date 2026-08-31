@@ -1,8 +1,11 @@
 package lumi.insert.app.service.implement;
  
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import lumi.insert.app.dto.request.CategoryGetRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -54,6 +57,9 @@ public class CategoryServiceImpl implements CategoryService {
         action = ActivityAction.CATEGORY_CREATED,
         actionMessage = "Category created"
     )
+    @CacheEvict(
+        value = "categories:first-page", allEntries = true
+    )
     public CategoryResponse createCategory(CategoryCreateRequest request) {
         log.info("Creating category with name: {}", request.getName());
 
@@ -87,6 +93,9 @@ public class CategoryServiceImpl implements CategoryService {
         action = ActivityAction.CATEGORY_UPDATED,
         actionMessage = "Category name updated"
     )
+    @CacheEvict(
+        value = "categories:first-page", allEntries = true
+    )
     public CategoryResponse updateCategoryName(CategoryUpdateRequest request) {
         log.info("Updating category name for ID: {} to: {}", request.getId(), request.getName());
 
@@ -118,6 +127,9 @@ public class CategoryServiceImpl implements CategoryService {
         action = ActivityAction.CATEGORY_UPDATED,
         actionMessage = "Category status set to active"
     )
+    @CacheEvict(
+        value = "categories:first-page", allEntries = true
+    )
     public CategoryResponse activateCategory(Long id) {
         log.info("Activating category with ID: {}", id);
 
@@ -145,6 +157,9 @@ public class CategoryServiceImpl implements CategoryService {
         entityName = "categories",
         action = ActivityAction.CATEGORY_UPDATED,
         actionMessage = "Category status set to inactive"
+    )
+    @CacheEvict(
+        value = "categories:first-page", allEntries = true
     )
     public CategoryResponse deactivateCategory(Long id) {
         log.info("Deactivating category with ID: {}", id);
@@ -187,7 +202,13 @@ public class CategoryServiceImpl implements CategoryService {
      * @return a {@link Slice} of {@link CategoryResponse} objects.
      */
     @Override
-    public Slice<CategoryResponse> getCategories(CategoryGetRequest request) {
+    @Cacheable(
+        value = "categories:first-page",
+        key = "#request.sortBy + '_' + #request.sortDirection + '_' + #request.getSize",
+        condition = "#request.getPage == 0 && (#request.getSize == 100 || #request.getSize == 12) " +
+            "&& #request.isArchived == false"
+    )
+    public SliceIndex<CategoryResponse> getCategories(CategoryGetRequest request) {
         log.debug("Getting categories with pagination - page: {}, size: {}", request.getPage(), request.getSize());
 
         Sort sort = Sort.by("name").ascending();
@@ -199,7 +220,7 @@ public class CategoryServiceImpl implements CategoryService {
         Slice<CategoryResponse> response = searchedCategories.map(categoryMapper::createDtoResponseFromCategory);
         log.debug("Category responses created, total: {}", response.getNumberOfElements());
 
-        return response;
+        return new SliceIndex<CategoryResponse>(response);
     }
     
 }

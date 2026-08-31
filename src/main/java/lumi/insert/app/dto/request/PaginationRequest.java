@@ -1,5 +1,6 @@
 package lumi.insert.app.dto.request;
 
+import jakarta.validation.constraints.Max;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class PaginationRequest {
 
     @Builder.Default
     @Schema(description = "Page size/number of records per page", example = "10")
+    @Max(value = 100)
     private Integer size = 10;
 
     @Builder.Default

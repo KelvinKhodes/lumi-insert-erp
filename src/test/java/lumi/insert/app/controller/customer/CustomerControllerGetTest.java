@@ -73,7 +73,7 @@ public class CustomerControllerGetTest extends BaseCustomerControllerTest{
     @Test
     void getCustomers_noFilterFoundEntity_returnOKAndListDTO() throws Exception{
         
-        when(customerService.getCustomers(any(CustomerGetByFilter.class))).thenReturn(sliceCustomerResponse);
+        when(customerService.getCustomers(any(CustomerGetByFilter.class))).thenReturn(new SliceIndex<>(sliceCustomerResponse));
 
         mockMvc.perform(
             get("/api/customers" )
@@ -91,7 +91,7 @@ public class CustomerControllerGetTest extends BaseCustomerControllerTest{
     @Test
     void getCustomers_FilterFoundEntity_returnOKAndListDTO() throws Exception{
         
-        when(customerService.getCustomers(any(CustomerGetByFilter.class))).thenReturn(sliceCustomerResponse);
+        when(customerService.getCustomers(any(CustomerGetByFilter.class))).thenReturn(new SliceIndex<>(sliceCustomerResponse));
 
         mockMvc.perform(
             get("/api/customers?name=test ger" )
@@ -108,7 +108,7 @@ public class CustomerControllerGetTest extends BaseCustomerControllerTest{
 
     @Test
     void getCustomers_FilterNotFound_returnEmptyList() throws Exception{
-        when(customerService.getCustomers(any(CustomerGetByFilter.class))).thenReturn(new SliceImpl<CustomerResponse>(List.of()));
+        when(customerService.getCustomers(any(CustomerGetByFilter.class))).thenReturn(new SliceIndex<>(new SliceImpl<CustomerResponse>(List.of())));
 
         mockMvc.perform(
             get("/api/customers?email=ajak12@gmail.com" )

@@ -8,8 +8,11 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.github.f4b6a3.uuid.UuidCreator;
@@ -28,7 +31,7 @@ import lumi.insert.app.mapper.ProductMapperImpl;
 
 @SpringBootTest
 @Transactional
-@ExtendWith(MockitoExtension.class) 
+@ExtendWith(MockitoExtension.class)
 public abstract class BaseProductServiceTest extends TestContainerTest {
 
     @Autowired
@@ -40,6 +43,9 @@ public abstract class BaseProductServiceTest extends TestContainerTest {
     @Autowired
     CategoryRepository categoryRepository;
 
+    @Autowired
+    CacheManager cacheManager;
+
     @InjectMocks
     ProductServiceImpl productServiceMock;
 
@@ -48,12 +54,22 @@ public abstract class BaseProductServiceTest extends TestContainerTest {
 
     @Mock
     CategoryRepository categoryRepositoryMock;
+
+    @Mock
+    RedisConnectionFactory redisConnectionFactory;
  
     @Spy 
     ProductMapper productMapper = new ProductMapperImpl();
 
     @BeforeEach
     void setUp() {
+        if (cacheManager.getCache("products") != null) {
+            cacheManager.getCache("products").clear();
+        }
+        if (cacheManager.getCache("products:first-page") != null) {
+            cacheManager.getCache("products:first-page").clear();
+        }
+
         EmployeeLogin employeeLogin = EmployeeLogin.builder()
         .id(UuidCreator.getTimeOrderedEpochFast())
         .username("Test Username")

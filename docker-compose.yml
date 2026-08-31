@@ -4,7 +4,7 @@ services:
     container_name: app
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx800m -XX:ActiveProcessorCount=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -XX:TieredStopAtLevel=1
+      - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx800m -XX:ActiveProcessorCount=2 -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -XX:TieredStopAtLevel=1
       - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD}
       - SMTP_MAIL_USERNAME=${SMTP_MAIL_USERNAME}
       - SMTP_MAIL_PASSWORD=${SMTP_MAIL_PASSWORD}
@@ -15,11 +15,13 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
       - ALGORITHM_JWT=${ALGORITHM_JWT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
       - database
       - rabbit-mq
+      - redis
     volumes:
       - ./logs:/app/logs
       - maven-cache:/root/.m2
@@ -141,5 +143,25 @@ services:
         reservations:
           memory: 150M
 
+  redis:
+    image: redis:8-alpine
+    container_name: redis
+    restart: always
+    volumes:
+      - ./redis.conf:/etc/redis/redis.conf:ro
+      - redis-cache:/data
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: sh -c "redis-server /etc/redis/redis.conf --requirepass $$REDIS_PASSWORD"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          memory: 128M
+
+
 volumes:
   maven-cache:
+  redis-cache:

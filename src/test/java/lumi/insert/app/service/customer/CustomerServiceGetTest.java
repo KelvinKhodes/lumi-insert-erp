@@ -1,7 +1,6 @@
 package lumi.insert.app.service.customer;
  
-import static org.junit.jupiter.api.Assertions.assertEquals; 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -87,7 +86,7 @@ public class CustomerServiceGetTest extends BaseCustomerServiceTest{
         SliceIndex<CustomerNameResponse> customer = customerServiceMock.searchCustomerNames(request);
         assertEquals(0, customer.getNumberOfElements());
         assertEquals(List.of(), customer.getContent());
-        assertEquals(false, customer.hasPrevious());
+        assertFalse(customer.isHasPrevious());
         verify(customerRepository, times(1)).getByNameContainingIgnoreCaseAndIdAfter(any(), eq(request.getLastId()) , argThat(arg -> arg.getPageSize() == 10));
     }
 
@@ -103,7 +102,7 @@ public class CustomerServiceGetTest extends BaseCustomerServiceTest{
         .maxTotalUnpaid(BigDecimal.valueOf(1500L))
         .build();
 
-        Slice<CustomerResponse> customer = customerServiceMock.getCustomers(request);
+        SliceIndex<CustomerResponse> customer = customerServiceMock.getCustomers(request);
         assertEquals(1, customer.getNumberOfElements()); 
     }
 
@@ -119,7 +118,7 @@ public class CustomerServiceGetTest extends BaseCustomerServiceTest{
         .maxTotalUnpaid(BigDecimal.valueOf(1500L))
         .build();
 
-        Slice<CustomerResponse> customer = customerServiceMock.getCustomers(request);
+        SliceIndex<CustomerResponse> customer = customerServiceMock.getCustomers(request);
         assertEquals(0, customer.getNumberOfElements()); 
     }
 }

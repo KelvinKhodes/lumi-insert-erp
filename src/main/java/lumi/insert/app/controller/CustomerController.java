@@ -112,11 +112,11 @@ public class CustomerController {
         path = "/api/customers",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    ResponseEntity<WebResponse<Slice<CustomerResponse>>> getCustomersAPI(@Valid @ModelAttribute CustomerGetByFilter request){ 
+    ResponseEntity<WebResponse<SliceIndex<CustomerResponse>>> getCustomersAPI(@Valid @ModelAttribute CustomerGetByFilter request){
         log.debug("Customers search request: {}", request);
-        Slice<CustomerResponse> resultFromService = customerService.getCustomers(request);
+        SliceIndex<CustomerResponse> resultFromService = customerService.getCustomers(request);
 
-        WebResponse<Slice<CustomerResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
+        WebResponse<SliceIndex<CustomerResponse>> wrappedResult = WebResponse.getWrapper(resultFromService, null);
  
         log.debug("Customers search request result: {}", resultFromService);
         return ResponseEntity.ok(wrappedResult);

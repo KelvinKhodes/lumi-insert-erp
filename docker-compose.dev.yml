@@ -1,0 +1,166 @@
+services:
+  app:
+    build: .
+    image: lumi-insert:latest
+    container_name: app
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx800m -XX:ActiveProcessorCount=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -XX:TieredStopAtLevel=1
+      - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD}
+      - SMTP_MAIL_USERNAME=${SMTP_MAIL_USERNAME}
+      - SMTP_MAIL_PASSWORD=${SMTP_MAIL_PASSWORD}
+      - CLOUDINARY_URL=${CLOUDINARY_URL}
+      - DB_HOST=database
+      - RABBITMQ_HOST=rabbit-mq
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - ALGORITHM_JWT=${ALGORITHM_JWT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - database
+      - rabbit-mq
+      - redis
+    volumes:
+      - ./logs:/app/logs
+      - maven-cache:/root/.m2
+    deploy:
+      resources:
+        limits:
+          cpus: '1.4'
+          memory: 900M
+        reservations:
+          memory: 256M
+
+  database:
+    image: postgres:18.1-alpine
+    container_name: database
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ./database:/var/lib/postgresql
+    deploy:
+      resources:
+        limits:
+          cpus: '0.40'
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  rabbit-mq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbit-mq
+    volumes:
+      - ./rabbitmq_data:/var/lib/rabbitmq
+    deploy:
+      resources:
+        limits:
+          cpus: '0.40'
+          memory: 300M
+        reservations:
+          memory: 150M
+
+  promtail:
+    image: grafana/promtail:3.6.9
+    profiles: ["monitoring"]
+    depends_on:
+      - app
+      - loki
+    volumes:
+      - ./logs:/var/log
+      - ./promtail.yaml:/etc/promtail/config.yaml:ro
+    command: -config.file=/etc/promtail/config.yaml
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 128M
+        reservations:
+          memory: 32M
+
+
+  loki:
+    image: grafana/loki:3.7.1
+    container_name: loki
+    profiles: ["monitoring"]
+    user: "0"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/config.yaml:ro
+      - ./loki_data:/tmp/loki
+    command: -config.file=/etc/loki/config.yaml
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: prometheus
+    profiles: ["monitoring"]
+    user: "0"
+    depends_on:
+      - app
+    volumes:
+      - ./prometheus-config.yaml:/etc/prometheus/config.yaml:ro
+      - ./prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/config.yaml'
+      - '--storage.tsdb.path=/prometheus'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.15'
+          memory: 128M
+        reservations:
+          memory: 64M
+
+  grafana:
+    image: grafana/grafana:13.0.1
+    container_name: grafana
+    profiles: ["monitoring"]
+    user: "0"
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - loki
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    deploy:
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 500M
+        reservations:
+          memory: 150M
+
+  redis:
+    image: redis:8-alpine
+    container_name: redis
+    restart: always
+    volumes:
+      - ./redis.conf:/etc/redis/redis.conf:ro
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: sh -c "redis-server /etc/redis/redis.conf --requirepass $$REDIS_PASSWORD"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          memory: 128M
+
+
+volumes:
+  maven-cache:

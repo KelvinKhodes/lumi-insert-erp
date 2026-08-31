@@ -1,14 +1,13 @@
 package lumi.insert.app.service.product;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import lumi.insert.app.dto.request.ProductCreateRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +18,7 @@ import lumi.insert.app.dto.response.ProductDeleteResponse;
 import lumi.insert.app.dto.response.ProductResponse;
 import lumi.insert.app.exception.BoilerplateRequestException;
 import lumi.insert.app.exception.NotFoundEntityException;
+import org.springframework.cache.Cache;
 
 public class ProductServiceEditTest extends BaseProductServiceTest {
     @Test
@@ -201,5 +201,116 @@ public class ProductServiceEditTest extends BaseProductServiceTest {
     public void deactivateProduct_idNotFound_throwNotFoundEntityException(){
         when(productRepositoryMock.findById(1L)).thenReturn(Optional.empty());
         assertThrows(NotFoundEntityException.class, () -> productServiceMock.deactivateProduct(1L));
+    }
+
+    @Test
+    @DisplayName("Should put and override cache after product updated")
+    public void updateProduct_putCache_returnCache(){
+        Cache cachedProductResponse = cacheManager.getCache("products");
+        Cache cachedProductFirstPage = cacheManager.getCache("products:first-page");
+
+        Product mockProduct = Product.builder()
+            .name("NIKE Jordan Low 3")
+            .basePrice(BigDecimal.valueOf(10000L))
+            .sellPrice(BigDecimal.valueOf(12000L))
+            .stockQuantity(BigDecimal.valueOf(50L))
+            .stockMinimum(BigDecimal.valueOf(5L))
+            .build();
+
+        Product savedProduct = productRepository.save(mockProduct);
+
+        ProductResponse mockResponse = ProductResponse.builder()
+            .id(savedProduct.getId())
+            .name("NIKE Jordan Low 3")
+            .build();
+
+        cachedProductResponse.put(mockResponse.id(), mockResponse);
+        cachedProductFirstPage.put("random", "random");
+
+        ProductUpdateRequest productEditRequest = ProductUpdateRequest.builder()
+            .id(savedProduct.getId())
+            .name("NIKE Jordan Low 4")
+            .basePrice(BigDecimal.valueOf(11000L))
+            .sellPrice(BigDecimal.valueOf(13000L))
+            .stockMinimum(BigDecimal.valueOf(2L))
+            .build();
+
+        ProductResponse editedProduct = productService.updateProduct(productEditRequest);
+
+        assertNotNull(cachedProductResponse.get(mockResponse.getId()));
+        ProductResponse cached = (ProductResponse) cachedProductResponse.get(mockResponse.getId()).get();
+
+        assertEquals(editedProduct.name(), cached.name());
+        assertNull(cachedProductFirstPage.get("random"));
+
+    }
+
+    @Test
+    @DisplayName("Should evict products cache when activate product")
+    public void activateProduct_evictAllCaches(){
+        Cache cachedProductResponse = cacheManager.getCache("products");
+        Cache cachedProductFirstPage = cacheManager.getCache("products:first-page");
+
+        Category category = Category.builder()
+            .name("Shoes")
+            .totalItems(10L)
+            .build();
+
+        Category savedCategory = categoryRepository.save(category);
+
+        Product mockProduct = Product.builder()
+            .name("NIKE Jordan Low 3")
+            .basePrice(BigDecimal.valueOf(10000L))
+            .sellPrice(BigDecimal.valueOf(12000L))
+            .stockQuantity(BigDecimal.valueOf(50L))
+            .stockMinimum(BigDecimal.valueOf(5L))
+            .category(savedCategory)
+            .isActive(false)
+            .build();
+
+        Product savedProduct = productRepository.save(mockProduct);
+
+        cachedProductResponse.put(savedProduct.getId(), "mockValue");
+        cachedProductFirstPage.put("random", "random");
+
+        ProductDeleteResponse setInactiveProduct = productService.activateProduct(savedProduct.getId());
+        assertNull(cachedProductFirstPage.get("random"));
+        assertNull(cachedProductResponse.get(setInactiveProduct.id()));
+        assertTrue(setInactiveProduct.isActive());
+    }
+
+    @Test
+    @DisplayName("Should evict products cache when deactivate product")
+    public void deactivateProduct_evictAllCaches(){
+        Cache cachedProductResponse = cacheManager.getCache("products");
+        Cache cachedProductFirstPage = cacheManager.getCache("products:first-page");
+
+        Category category = Category.builder()
+            .name("Shoes")
+            .totalItems(10L)
+            .build();
+
+        Category savedCategory = categoryRepository.save(category);
+
+        Product mockProduct = Product.builder()
+            .name("NIKE Jordan Low 3")
+            .basePrice(BigDecimal.valueOf(10000L))
+            .sellPrice(BigDecimal.valueOf(12000L))
+            .stockQuantity(BigDecimal.valueOf(50L))
+            .stockMinimum(BigDecimal.valueOf(5L))
+            .category(savedCategory)
+            .isActive(true)
+            .build();
+
+        Product savedProduct = productRepository.save(mockProduct);
+
+        cachedProductResponse.put(savedProduct.getId(), "mockValue");
+        cachedProductFirstPage.put("random", "random");
+
+        ProductDeleteResponse setInactiveProduct = productService.deactivateProduct(savedProduct.getId());
+
+        assertNull(cachedProductFirstPage.get("random"));
+        assertNull(cachedProductResponse.get(savedProduct.getId()));
+        assertFalse(setInactiveProduct.isActive());
     }
 }

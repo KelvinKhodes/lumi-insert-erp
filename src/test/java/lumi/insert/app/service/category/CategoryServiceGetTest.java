@@ -1,17 +1,22 @@
 package lumi.insert.app.service.category;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import lumi.insert.app.dto.request.CategoryGetRequest;
+import lumi.insert.app.dto.request.ProductGetByFilter;
+import lumi.insert.app.dto.response.ProductResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -76,10 +81,62 @@ public class CategoryServiceGetTest extends BaseCategoryServiceTest{
         .size(5)
         .build();
 
-        Slice<CategoryResponse> result = categoryServiceMock.getCategories(categoryGetRequest);
+        SliceIndex<CategoryResponse> result = categoryServiceMock.getCategories(categoryGetRequest);
 
         assertEquals(9, result.getNumberOfElements());
         assertEquals("Category9", result.getContent().getLast().name());
 
+    }
+
+    @Test
+    @DisplayName("Should return cached response if data appear")
+    void getCategories_whenConditionMet_shouldReturnFromCache() {
+        CategoryGetRequest request = CategoryGetRequest.builder()
+            .size(12)
+            .sortBy("name")
+            .sortDirection("ASC")
+            .build();
+
+        String cacheKey = "name_ASC_12";
+
+        Cache cachedCategories = cacheManager.getCache("categories:first-page");
+        assertNotNull(cachedCategories);
+
+        List<CategoryResponse> smartphone = List.of(
+            new CategoryResponse(1L, "Smartphone", null, true, null, null)
+        );
+
+        cachedCategories.put(cacheKey, new SliceImpl<>(smartphone));
+
+        SliceIndex<CategoryResponse> categories = categoryService.getCategories(request);
+        assertNotNull(categories);
+        assertEquals("Smartphone", categories.getContent().getFirst().name());
+        assertEquals(1, categories.getSize());
+    }
+
+    @Test
+    @DisplayName("Should not cache response and get from cache if condition not meet")
+    void getCategories_noConditionMeet_shouldNotReturnFromCache() {
+        CategoryGetRequest request = CategoryGetRequest.builder()
+            .size(16)
+            .sortBy("name")
+            .sortDirection("ASC")
+            .build();
+
+        String cacheKey = "name_ASC_12";
+
+        Cache cachedCategories = cacheManager.getCache("categories:first-page");
+        assertNotNull(cachedCategories);
+
+        List<CategoryResponse> smartphone = List.of(
+            new CategoryResponse(1L, "Smartphone", null, true, null, null)
+        );
+
+        cachedCategories.put(cacheKey, new SliceImpl<>(smartphone));
+
+        SliceIndex<CategoryResponse> categories = categoryService.getCategories(request);
+        assertNotNull(categories);
+        assertTrue(categories.getContent().isEmpty());
+        assertNull(cachedCategories.get("name_ASC_16"));
     }
 } 

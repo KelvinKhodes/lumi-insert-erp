@@ -101,7 +101,7 @@ public class SupplierServiceGetTest extends BaseSupplierServiceTest{
         .maxTotalUnpaid(BigDecimal.valueOf(1500L))
         .build();
 
-        Slice<SupplierDetailResponse> Supplier = supplierServiceMock.getSuppliers(request);
+        SliceIndex<SupplierDetailResponse> Supplier = supplierServiceMock.getSuppliers(request);
         assertEquals(1, Supplier.getNumberOfElements()); 
     }
 
@@ -117,7 +117,7 @@ public class SupplierServiceGetTest extends BaseSupplierServiceTest{
         .maxTotalUnpaid(BigDecimal.valueOf(1500L))
         .build();
 
-        Slice<SupplierDetailResponse> Supplier = supplierServiceMock.getSuppliers(request);
+        SliceIndex<SupplierDetailResponse> Supplier = supplierServiceMock.getSuppliers(request);
         assertEquals(0, Supplier.getNumberOfElements()); 
     }
 }

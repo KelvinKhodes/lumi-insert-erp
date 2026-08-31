@@ -73,4 +73,30 @@ public class CustomerGetByFilter extends PaginationRequest{
     @Builder.Default
     @Pattern(regexp = "DESC|ASC", message = "check documentation for sortDirection specification")
     String sortDirection = "DESC";
+
+    /**
+     * Raw Condition
+     * condition =
+     *             "&& (#request.getPage == 0 && #request.getSize == 12) " +
+     *             "&& (#request.name == null || #request.name.isEmpty()) && (#request.email == null || #request.email.isEmpty()) " +
+     *             "&& (#request.contact == null || #request.contact.isEmpty()) && #request.isActive == null " +
+     *             "&& #request.minTotalTransaction.compareTo(T(java.math.BigDecimal).ZERO) == 0 " +
+     *             "&& #request.maxTotalTransaction.compareTo(T(java.math.BigDecimal).valueOf(9999990L)) == 0 " +
+     *             "&& #request.minTotalUnpaid.compareTo(T(java.math.BigDecimal).ZERO) == 0 " +
+     *             "&& #request.maxTotalUnpaid.compareTo(T(java.math.BigDecimal).valueOf(9999999999990L)) == 0 " +
+     *             "&& #request.minTotalPaid.compareTo(T(java.math.BigDecimal).ZERO) == 0 " +
+     *             "&& #request.maxTotalPaid.compareTo(T(java.math.BigDecimal).valueOf(9999999999990L)) == 0"
+     * @return boolean of condition
+     */
+    public boolean isForFirstPage(){
+        return (this.getPage() == 0 && this.getSize() == 12  && (this.name == null || this.name.isEmpty())
+            && (this.email == null || this.email.isEmpty())
+            && (this.contact == null || this.contact.isEmpty()) && this.isActive == null 
+            && this.minTotalTransaction == 0L
+            && this.maxTotalTransaction == 9999990L
+            && this.minTotalUnpaid.compareTo(BigDecimal.ZERO) == 0 
+            && this.maxTotalUnpaid.compareTo(BigDecimal.valueOf(9999999999990L)) == 0 
+            && this.minTotalPaid.compareTo(BigDecimal.ZERO) == 0
+            && this.maxTotalPaid.compareTo(BigDecimal.valueOf(9999999999990L)) == 0);
+    }
 }

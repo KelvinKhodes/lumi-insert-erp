@@ -1,5 +1,6 @@
 package lumi.insert.app.dto.response;
 
+import java.io.Serializable;
 import java.util.UUID;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -18,7 +19,7 @@ public record CustomerResponse(
     @Schema(description = "Primary contact or WhatsApp number", example = "081234567890")
     String contact
     
-)  implements Identifiable {
+)  implements Identifiable, Serializable {
 
     @Override
     public String getId() {

@@ -6,7 +6,8 @@ import java.util.UUID;
 
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier; 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken; 
 import org.springframework.security.core.GrantedAuthority;
@@ -47,6 +48,9 @@ public class JwtFilter extends OncePerRequestFilter{
     @Qualifier("handlerExceptionResolver") 
     private HandlerExceptionResolver resolver;
 
+    @Autowired
+    RedisTemplate<String, Object> redisTemplate;
+
     List<String> link = List.of(
         "/auth/login",
         "/auth/refresh",
@@ -86,6 +90,10 @@ public class JwtFilter extends OncePerRequestFilter{
             DecodedJWT accessToken; 
 
             try {
+                if (redisTemplate.opsForValue().get("blacklist::" + token) != null) {
+                    resolver.resolveException(request, response, null, new BadCredentialsException("Access token is invalid, try to login again" + redisTemplate.opsForValue().get("blacklist::" + token)));
+                    return;
+                }
                 accessToken = jwtUtils.parseAccessToken(token);    
             } catch (JWTVerificationException e) { 
                 if(e instanceof TokenExpiredException){
