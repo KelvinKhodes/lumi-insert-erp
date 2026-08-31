@@ -1,12 +1,19 @@
 package lumi.insert.app.core.entity.nondatabase;
 
+import java.io.Serializable;
 import java.util.List;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
  
 import lumi.insert.app.dto.response.CustomerNameResponse;
 import lumi.insert.app.dto.response.ProductName;
 import lumi.insert.app.dto.response.SupplierNameResponse;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.domain.Sort;
 
 /**
  ** Custom wrapper for class {@link Slice}. 
@@ -14,7 +21,10 @@ import lumi.insert.app.dto.response.SupplierNameResponse;
  * @author KelvinKhodes
  * @since 1.0.0 
  */
-public class SliceIndex<T> {
+@NoArgsConstructor
+@Setter
+@Getter
+public class SliceIndex<T> implements Serializable {
     private boolean first;
     private boolean last;
     private boolean hasNext;
@@ -56,16 +66,4 @@ public class SliceIndex<T> {
             }
         }
     }
-
-    // Getters
-    public boolean isFirst() { return first; }
-    public boolean isLast() { return last; }
-    public boolean hasNext() { return hasNext; }
-    public boolean hasPrevious() { return hasPrevious; }
-    public int getNumberOfElements() { return numberOfElements; }
-    public int getSize() { return size; }
-    public int getNumber() { return number; }
-    public boolean isEmpty() { return empty; }
-    public Object getLastId() { return lastId; }
-    public List<T> getContent() {return content; }
 }
