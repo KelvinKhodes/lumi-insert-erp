@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import lumi.insert.app.dto.request.CategoryGetRequest;
 import lumi.insert.app.dto.request.ProductGetByFilter;
 import lumi.insert.app.dto.response.ProductResponse;
@@ -80,7 +81,7 @@ public class CategoryServiceGetTest extends BaseCategoryServiceTest{
         .size(5)
         .build();
 
-        Slice<CategoryResponse> result = categoryServiceMock.getCategories(categoryGetRequest);
+        SliceIndex<CategoryResponse> result = categoryServiceMock.getCategories(categoryGetRequest);
 
         assertEquals(9, result.getNumberOfElements());
         assertEquals("Category9", result.getContent().getLast().name());
@@ -107,7 +108,7 @@ public class CategoryServiceGetTest extends BaseCategoryServiceTest{
 
         cachedCategories.put(cacheKey, new SliceImpl<>(smartphone));
 
-        Slice<CategoryResponse> categories = categoryService.getCategories(request);
+        SliceIndex<CategoryResponse> categories = categoryService.getCategories(request);
         assertNotNull(categories);
         assertEquals("Smartphone", categories.getContent().getFirst().name());
         assertEquals(1, categories.getSize());
@@ -133,7 +134,7 @@ public class CategoryServiceGetTest extends BaseCategoryServiceTest{
 
         cachedCategories.put(cacheKey, new SliceImpl<>(smartphone));
 
-        Slice<CategoryResponse> categories = categoryService.getCategories(request);
+        SliceIndex<CategoryResponse> categories = categoryService.getCategories(request);
         assertNotNull(categories);
         assertTrue(categories.getContent().isEmpty());
         assertNull(cachedCategories.get("name_ASC_16"));

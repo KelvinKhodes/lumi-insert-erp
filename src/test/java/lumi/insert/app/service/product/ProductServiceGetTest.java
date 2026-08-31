@@ -94,7 +94,7 @@ public class ProductServiceGetTest extends BaseProductServiceTest{
         assertEquals("Product 2", allProductNames.getContent().get(1).name());
         assertEquals("Product 3", allProductNames.getContent().get(2).name());
         assertEquals("Product 4", allProductNames.getContent().get(3).name());
-        assertFalse(allProductNames.hasNext());
+        assertFalse(allProductNames.isHasNext());
     }
 
     @Test
@@ -114,7 +114,7 @@ public class ProductServiceGetTest extends BaseProductServiceTest{
         SliceIndex<ProductName> allProductNames = productServiceMock.searchProductNames(request);
 
         assertEquals(0, allProductNames.getNumberOfElements());
-        assertFalse(allProductNames.hasNext());
+        assertFalse(allProductNames.isHasNext());
         assertTrue(allProductNames.isEmpty());
     }
 
@@ -287,10 +287,8 @@ public class ProductServiceGetTest extends BaseProductServiceTest{
         .categoryId(saveAndFlush.getId())
         .build();
 
-        Slice<ProductResponse> productsByRequests = productService.getProductsByRequests(productGetByFilter);
-        Sort sort = Sort.by("sellPrice").ascending();
+        SliceIndex<ProductResponse> productsByRequests = productService.getProductsByRequests(productGetByFilter);
         assertEquals(1, productsByRequests.getNumberOfElements());
-        assertEquals(sort, productsByRequests.getSort());
         assertTrue(BigDecimal.valueOf(5999L).compareTo(productsByRequests.getContent().getFirst().sellPrice()) == 0);
         assertTrue(BigDecimal.valueOf(5999L).compareTo(productsByRequests.getContent().getLast().sellPrice()) == 0);
     }
@@ -370,7 +368,7 @@ public class ProductServiceGetTest extends BaseProductServiceTest{
 
     cachedProducts.put(cacheKey, new SliceImpl<>(mockResponseList));
 
-    Slice<ProductResponse> products = productService.getProductsByRequests(request);
+    SliceIndex<ProductResponse> products = productService.getProductsByRequests(request);
     assertNotNull(products);
     assertEquals("Shoes", products.getContent().getFirst().name());
     assertEquals(1, products.getSize());
@@ -393,7 +391,7 @@ public class ProductServiceGetTest extends BaseProductServiceTest{
         .maxPrice(BigDecimal.valueOf(50000000))
         .build();
 
-    Slice<ProductResponse> products = productService.getProductsByRequests(request);
+    SliceIndex<ProductResponse> products = productService.getProductsByRequests(request);
 
     assertTrue(products.isEmpty());
   }
