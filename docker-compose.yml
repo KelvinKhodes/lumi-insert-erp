@@ -4,7 +4,7 @@ services:
     container_name: app
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx800m -XX:ActiveProcessorCount=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -XX:TieredStopAtLevel=1
+      - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx800m -XX:ActiveProcessorCount=2 -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -XX:TieredStopAtLevel=1
       - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD}
       - SMTP_MAIL_USERNAME=${SMTP_MAIL_USERNAME}
       - SMTP_MAIL_PASSWORD=${SMTP_MAIL_PASSWORD}
@@ -148,8 +148,10 @@ services:
     restart: always
     volumes:
       - ./redis.conf:/etc/redis/redis.conf:ro
-      - cache:/data
-    command: sh -c "redis-server /etc/redis/redis.conf --requirepass $${REDIS_PASSWORD}"
+      - redis-cache:/data
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: sh -c "redis-server /etc/redis/redis.conf --requirepass $REDIS_PASSWORD"
     deploy:
       resources:
         limits:
@@ -161,3 +163,4 @@ services:
 
 volumes:
   maven-cache:
+  redis-cache:
