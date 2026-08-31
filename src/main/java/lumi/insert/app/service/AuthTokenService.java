@@ -2,6 +2,7 @@ package lumi.insert.app.service;
 
 import lumi.insert.app.dto.request.AuthTokenCreateRequest;
 import lumi.insert.app.dto.response.AuthTokenResponse;
+import lumi.insert.app.dto.response.DeleteTokenResponse;
 
 public interface AuthTokenService {
     
@@ -9,6 +10,6 @@ public interface AuthTokenService {
 
     AuthTokenResponse refreshAuthToken(String refreshToken);
 
-    void deleteRefreshToken(String accessToken, String refreshToken);
+    DeleteTokenResponse deleteRefreshToken(String accessToken, String refreshToken);
     
 }

@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 
+import lumi.insert.app.dto.response.DeleteTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AccountExpiredException;
@@ -153,14 +154,15 @@ public class AuthTokenServiceImpl implements AuthTokenService{
     @ActivityLogger(
         entityName = "auth_tokens",
         action = ActivityAction.LOGOUT,
-        actionMessage = "Employee logout",
-        entityIdFromSingleParam = true
+        actionMessage = "Employee logout"
     )
-    public void deleteRefreshToken(String accessToken, String refreshToken) {
+    public DeleteTokenResponse deleteRefreshToken(String accessToken, String refreshToken) {
         log.info("Deleting refresh token={}", refreshToken);
         authTokenRepository.deleteByRefreshToken(refreshToken);
         redisTemplate.opsForValue().set("blacklist::" + accessToken, true);
         redisTemplate.expire("blacklist::" + accessToken, 15, TimeUnit.MINUTES);
+
+        return new DeleteTokenResponse(refreshToken);
     }
     
 }
