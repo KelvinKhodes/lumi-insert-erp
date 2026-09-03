@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -86,7 +88,7 @@ public class MemoController {
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     ResponseEntity<WebResponse<Boolean>> createMemoViewAPI(@AuthenticationPrincipal EmployeeLogin login, @Parameter(description = "Memo ID") @PathVariable(name = "id") Long id){
-        log.debug("Memo read mark request for memo ID: {} by employee: {}", id, login.getUsername());
+        log.debug("Memo read mark request for memo ID: {} by employee:", id);
         MemoView resultFromService = memoService.createMemoView(login, id);
         log.debug("Memo view created: {}", resultFromService);
         Boolean isFailed =  resultFromService.getId().isEmpty();
@@ -174,7 +176,7 @@ public class MemoController {
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     ResponseEntity<WebResponse<Slice<MemoResponse>>> getMemosAPI(@AuthenticationPrincipal EmployeeLogin login, @Parameter(description = "Filter memos updated after this date (ISO format, defaults to 1 month ago)") @RequestParam(name = "updatedAt", required = false) LocalDateTime time){
-        log.debug("Memos list request for employee: {}, updated after: {}", login.getUsername(), time);
+        log.debug("Memos list request for employee, updated after: {}", time);
         if(time == null) time = LocalDateTime.now().minusMonths(1);
         Slice<MemoResponse> resultFromService = memoService.getMemos(login, time);
         log.debug("Memos found: {}", resultFromService);
