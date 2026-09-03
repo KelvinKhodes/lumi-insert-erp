@@ -1,43 +1,32 @@
 package lumi.insert.app.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import lumi.insert.app.mapper.*;
+import lumi.insert.app.service.*;
 import org.junit.jupiter.api.BeforeEach;
+import org.mockito.Answers;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest; 
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import lumi.insert.app.TestContainerTest; 
-import lumi.insert.app.mapper.AllSupplyMapper;
-import lumi.insert.app.mapper.AllTransactionMapper;
-import lumi.insert.app.mapper.CategoryMapper;
-import lumi.insert.app.mapper.ProductMapperImpl;
-import lumi.insert.app.service.AuthTokenService;
-import lumi.insert.app.service.CategoryService;
-import lumi.insert.app.service.CustomerService;
-import lumi.insert.app.service.EmployeeService;
-import lumi.insert.app.service.MemoService;
-import lumi.insert.app.service.PdfService;
-import lumi.insert.app.service.ProductService;
-import lumi.insert.app.service.SupplierService;
-import lumi.insert.app.service.SupplyPaymentService;
-import lumi.insert.app.service.SupplyService;
-import lumi.insert.app.service.TransactionItemService;
-import lumi.insert.app.service.TransactionPaymentService;
-import lumi.insert.app.service.TransactionService;
-import lumi.insert.app.service.XlsxService;
-import lumi.insert.app.service.implement.StockCardServiceImpl; 
+import lumi.insert.app.TestContainerTest;
+import lumi.insert.app.service.implement.StockCardServiceImpl;
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest 
 @WithMockUser(username = "admin")
-@ActiveProfiles("test") 
+@ActiveProfiles("test")
+@AutoConfigureMockMvc(addFilters = false)
 public abstract class BaseControllerTest extends TestContainerTest{
-    
+
+    @Autowired
     protected MockMvc mockMvc;
 
     @MockitoBean
@@ -85,6 +74,9 @@ public abstract class BaseControllerTest extends TestContainerTest{
     @MockitoBean
     protected TransactionPaymentService transactionPaymentService;
 
+    @MockitoBean
+    protected ActivityLogService activityLogService;
+
     @Autowired
     protected AllTransactionMapper allTransactionMapper;
 
@@ -100,13 +92,18 @@ public abstract class BaseControllerTest extends TestContainerTest{
     @Autowired
     protected ProductMapperImpl productMapper;
 
+    @Autowired
+    protected ActivityLogMapper activityLogMapper;
 
     @BeforeEach
     void setup(WebApplicationContext context) {
-    mockMvc = MockMvcBuilders
-            .webAppContextSetup(context)
-            .apply(SecurityMockMvcConfigurers.springSecurity()) 
-            .build();
+//    mockMvc = MockMvcBuilders
+//            .webAppContextSetup(context)
+////            .apply(SecurityMockMvcConfigurers.springSecurity())
+//            .build();
+
+     when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+     when(valueOperations.get(any())).thenReturn(null);
     }
 
 }
