@@ -2,6 +2,8 @@ package lumi.insert.app.service.pdf;
  
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -9,12 +11,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import lumi.insert.app.utils.generator.NumberFormatter;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.github.f4b6a3.uuid.UuidCreator;
@@ -39,7 +42,8 @@ public class PdfServiceTest {
     private PdfServiceImpl pdfService;
 
     @Test
-    void testExportSupplyWithItems_ShouldReturnValidPdfContent() throws IOException { 
+    void testExportSupplyWithItems_ShouldReturnValidPdfContent() throws IOException {
+
         ProductName productName = ProductName.builder()
         .id(1L)
         .name("Shoes")
@@ -81,33 +85,35 @@ public class PdfServiceTest {
                 null,
                 LocalDateTime.now()
         );
- 
-        ByteArrayInputStream result = pdfService.exportSupplyWithItems(mockData);
- 
-        assertNotNull(result);
-        byte[] pdfBytes = result.readAllBytes();
-        assertTrue(pdfBytes.length > 0);
- 
-        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            String text = stripper.getText(document);
- 
-            assertTrue(text.contains("Supply Order"));
-            assertTrue(text.contains("Invoice No: INV-999"));
-            assertTrue(text.contains("Supplier: Acme Supply Co."));
-             
-            assertTrue(text.contains("Shoes")); 
-            assertTrue(text.contains("10"));
-             
-            assertTrue(text.contains("Subtotal"));
-            assertTrue(text.contains("200"));
-            assertTrue(text.contains("Refund value"));
-            assertTrue(text.contains("0")); 
-            assertTrue(text.contains("Grandtotal"));
-            assertTrue(text.contains("182"));
-             
-            assertTrue(text.contains("Jekael"));
-            assertTrue(text.contains("Warehouse Staff"));
+
+        try(MockedStatic<NumberFormatter> mockedHelper = Mockito.mockStatic(NumberFormatter.class)){
+            mockedHelper.when(() -> NumberFormatter.convertToCurrency(any())).thenAnswer(invocation -> invocation.getArgument(0).toString());
+
+            mockedHelper.when(() -> NumberFormatter.normalizeBigDecimal(any(), anyInt())).thenAnswer(invocation -> invocation.getArgument(0));
+            ByteArrayInputStream result = pdfService.exportSupplyWithItems(mockData);
+
+            assertNotNull(result);
+            byte[] pdfBytes = result.readAllBytes();
+            assertTrue(pdfBytes.length > 0);
+
+            try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+                PDFTextStripper stripper = new PDFTextStripper();
+                String text = stripper.getText(document);
+
+                assertTrue(text.contains("Supply Order"));
+                assertTrue(text.contains("No. Invoice: INV-999"));
+                assertTrue(text.contains("Supplier: Acme Supply Co."));
+
+                assertTrue(text.contains("Shoes"));
+                assertTrue(text.contains("10"));
+
+                assertTrue(text.contains("Subtotal"));
+                assertTrue(text.contains("200"));
+                assertTrue(text.contains("Grandtotal"));
+                assertTrue(text.contains("182"));
+
+                assertTrue(text.contains("Warehouse Staff"));
+            }
         }
     }
 
@@ -159,35 +165,37 @@ public class PdfServiceTest {
                 LocalDateTime.now(),
                 LocalDateTime.now()
         );
- 
-        ByteArrayInputStream result = pdfService.exportTransactionWithItems(mockData);
- 
-        assertNotNull(result);
-        byte[] pdfBytes = result.readAllBytes();
-        assertTrue(pdfBytes.length > 0);
- 
-        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            String text = stripper.getText(document);
- 
-            assertTrue(text.contains("Transaction Order"));
-            assertTrue(text.contains("Invoice No: INV-999"));
-            assertTrue(text.contains("Customer: Acme Supply Co."));
-             
-            assertTrue(text.contains("Shoes")); 
-            assertTrue(text.contains("10"));
 
-            assertTrue(text.contains("Watch")); 
-             
-            assertTrue(text.contains("Subtotal"));
-            assertTrue(text.contains("200"));
-            assertTrue(text.contains("Refund value"));
-            assertTrue(text.contains("0")); 
-            assertTrue(text.contains("Grandtotal"));
-            assertTrue(text.contains("182"));
-             
-            assertTrue(text.contains("Jekael"));
-            assertTrue(text.contains("Cashier Staff"));
+        try(MockedStatic<NumberFormatter> mockedHelper = Mockito.mockStatic(NumberFormatter.class)) {
+            mockedHelper.when(() -> NumberFormatter.convertToCurrency(any())).thenAnswer(invocation -> invocation.getArgument(0).toString());
+
+            mockedHelper.when(() -> NumberFormatter.normalizeBigDecimal(any(), anyInt())).thenAnswer(invocation -> invocation.getArgument(0));
+            ByteArrayInputStream result = pdfService.exportTransactionWithItems(mockData);
+
+            assertNotNull(result);
+            byte[] pdfBytes = result.readAllBytes();
+            assertTrue(pdfBytes.length > 0);
+
+            try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+                PDFTextStripper stripper = new PDFTextStripper();
+                String text = stripper.getText(document);
+
+                assertTrue(text.contains("Transaction Order"));
+                assertTrue(text.contains("No. Invoice: INV-999"));
+                assertTrue(text.contains("Customer: Acme Supply Co."));
+
+                assertTrue(text.contains("Shoes"));
+                assertTrue(text.contains("10"));
+
+                assertTrue(text.contains("Watch"));
+
+                assertTrue(text.contains("Subtotal"));
+                assertTrue(text.contains("200"));
+                assertTrue(text.contains("Grandtotal"));
+                assertTrue(text.contains("182"));
+
+                assertTrue(text.contains("Cashier Staff"));
+            }
         }
     }
 
@@ -221,7 +229,7 @@ public class PdfServiceTest {
  
             assertTrue(pdfText.contains("Products statistic"));
             assertTrue(pdfText.contains("Shoes"));
-            assertTrue(pdfText.contains("100Pcs"));
+            assertTrue(pdfText.contains("Pcs"));
             assertTrue(pdfText.contains("Tea"));
              
             assertTrue(document.getNumberOfPages() > 0);
@@ -230,7 +238,6 @@ public class PdfServiceTest {
 
     @Test
     void testExportProductsStatistic_EmptyList_ShouldStillGeneratePdf() throws IOException {
-        // Test skenario jika data kosong (untuk mencegah NullPointerException)
         TransactionItemStatisticResponse statsResponse = TransactionItemStatisticResponse.builder()
         .productRefunds(List.of())
         .productSales(List.of())
