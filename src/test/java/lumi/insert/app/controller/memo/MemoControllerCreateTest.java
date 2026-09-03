@@ -19,7 +19,10 @@ import org.springframework.http.MediaType;
 import lumi.insert.app.core.entity.MemoView;
 import lumi.insert.app.core.entity.nondatabase.EmployeeLogin;
 import lumi.insert.app.core.entity.nondatabase.EmployeeRole;
-import lumi.insert.app.dto.request.MemoCreateRequest; 
+import lumi.insert.app.dto.request.MemoCreateRequest;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.TestSecurityContextHolder;
 
 public class MemoControllerCreateTest extends BaseMemoControllerTest{
     
@@ -65,7 +68,7 @@ public class MemoControllerCreateTest extends BaseMemoControllerTest{
             post("/api/memos")
             .accept(MediaType.APPLICATION_JSON_VALUE)
             .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
-            .param("title", memoResponse.title()) 
+            .param("title", memoResponse.title())
         )
         .andDo(print())
         .andExpect(status().isBadRequest())
@@ -77,15 +80,23 @@ public class MemoControllerCreateTest extends BaseMemoControllerTest{
     void createMemoViewAPI_validRequest_returnTrue() throws Exception{ 
         when(memoService.createMemoView(any(EmployeeLogin.class), anyLong())).thenReturn(new MemoView("id", null, null));
 
+
+
         mockMvc.perform(
             post("/api/memos/1/read")
-            .accept(MediaType.APPLICATION_JSON_VALUE)  
-            .with(authentication(auth))  
+            .accept(MediaType.APPLICATION_JSON_VALUE)
+                .with(request -> {
+                    SecurityContext context = SecurityContextHolder.createEmptyContext();
+                    context.setAuthentication(auth);
+                    TestSecurityContextHolder.setContext(context);
+                    return request;
+                })
         )
         .andDo(print())
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.errors").isEmpty())
         .andExpect(jsonPath("$.data").value(true));
+
 
         verify(memoService, times(1)).createMemoView(argThat(arg -> arg.getUsername().equals("lumi") && arg.getRole() == EmployeeRole.FINANCE), eq(1L));
     }
@@ -96,14 +107,13 @@ public class MemoControllerCreateTest extends BaseMemoControllerTest{
 
         mockMvc.perform(
             post("/api/memos/1/read")
-            .accept(MediaType.APPLICATION_JSON_VALUE)  
-            .with(authentication(auth)) 
+            .accept(MediaType.APPLICATION_JSON_VALUE)
+
         )
         .andDo(print())
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.errors").isEmpty())
         .andExpect(jsonPath("$.data").isNotEmpty());
-
         verify(memoService, times(1)).createMemoView(argThat(arg -> arg.getUsername().equals("lumi") && arg.getRole() == EmployeeRole.FINANCE), eq(1L));
     }
 
