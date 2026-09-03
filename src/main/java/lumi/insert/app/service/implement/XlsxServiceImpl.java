@@ -101,7 +101,7 @@ public class XlsxServiceImpl implements XlsxService{
                     sheet.setColumnWidth(x,  24 * 256);
                 } else {
                     sheet.setColumnWidth(x,  20 * 256); 
-                    sheet.setDefaultColumnStyle(x, currencyStyle); 
+                    if(x != 3) sheet.setDefaultColumnStyle(x, currencyStyle);
                 }
             }
             headerRow.setRowStyle(defaultCenter);
