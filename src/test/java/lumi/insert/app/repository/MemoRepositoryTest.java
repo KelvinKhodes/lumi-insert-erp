@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,7 +38,7 @@ import lumi.insert.app.dto.response.MemoResponse;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional
 @ActiveProfiles("test")
-@Import({AuditorAwareImpl.class})
+@Import({AuditorAwareImpl.class, SimpleCacheManager.class})
 public class MemoRepositoryTest  extends TestContainerTest {
     
     @Autowired

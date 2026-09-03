@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired; 
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +41,7 @@ import lumi.insert.app.TestContainerTest;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional
 @ActiveProfiles("test")
-@Import({JpaSpecGenerator.class, AuditorAwareImpl.class})
+@Import({JpaSpecGenerator.class, AuditorAwareImpl.class, SimpleCacheManager.class})
 public class CustomerRepositoryTest extends TestContainerTest {
 
     @Autowired

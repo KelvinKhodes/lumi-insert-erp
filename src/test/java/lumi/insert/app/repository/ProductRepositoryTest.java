@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice; 
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -48,7 +49,7 @@ import lumi.insert.app.utils.generator.JpaSpecGenerator;
 @Transactional
 @Slf4j 
 @ActiveProfiles("test")
-@Import({JpaSpecGenerator.class, AuditorAwareImpl.class})
+@Import({JpaSpecGenerator.class, AuditorAwareImpl.class, SimpleCacheManager.class})
 public class ProductRepositoryTest  extends TestContainerTest {
 
     @Autowired
