@@ -1,5 +1,6 @@
 package lumi.insert.app.aspect;
 
+import lumi.insert.app.core.entity.nondatabase.ActivityAction;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -55,6 +56,9 @@ public class ActivityLogAspect {
             result.setCreatedBy(auditor);
             result.setUpdatedBy(auditor);
 
+        if (activityLog.action().equals(ActivityAction.EXPORT_DATA)){
+            result.setEntityId("EXPORT MULTIPLE");
+        }
         // Check the entityIdFromSingleParam. If true, entityId set by method parameter. 
         if (activityLog.entityIdFromSingleParam()){
             Object[] args = joinPoint.getArgs();
