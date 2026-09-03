@@ -58,18 +58,81 @@ public class MailSenderServiceImpl implements MailSenderService {
     @Autowired
     AllTransactionMapper allTransactionMapper;
 
-    private String template = 
-            "<div style='font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;'>" +
-                "<div style='max-width: 600px; margin: auto; background: white; padding: 40px; text-align: center; border-radius: 8px;'>" +
-                    "<img src='https://github.githubassets.com/assets/pull-shark-default-498c279a747d.png' style='width: 150px; margin-bottom: 20px;' />" +
-                    "<h2 style='color: #333;'>Thanks for your transaction!</h2>" +
-                    "<p style='color: #666; line-height: 1.6;'>We'd like to share your recent transaction's invoice, for further information, you can find us on: </p>" +
-                    "<br>" +
-                    "<a href='https://support.lumi-insert.my.id' style='background-color: #24e5d0; color: #003333; padding: 15px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Launch a capsule</a>" +
-                    "<hr style='border: 0; border-top: 1px solid #eee; margin: 40px 0;'>" + 
-                    "<p style='text-align: left;'>LUMI Insert Inc.</p>" +
-                "</div>" +
-     "</div>";
+    private final String transactionTemplate =
+        "<div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; padding: 40px 20px;'>" +
+            "<div style='max-width: 600px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>" +
+
+            "<!-- Brand Header -->" +
+            "<table width='100%' border='0' cellspacing='0' cellpadding='0' style='margin-bottom: 24px;'>" +
+            "<tr>" +
+            "<td align='left' valign='middle'>" +
+            "<img src='https://github.githubassets.com/assets/pull-shark-default-498c279a747d.png' alt='Logo' style='width: 42px; height: 42px; display: block;' />" +
+            "</td>" +
+            "<td align='right' valign='middle'>" +
+            "<span style='font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #059669; background-color: #ecfdf5; padding: 6px 12px; border-radius: 20px;'>Payment Confirmed</span>" +
+            "</td>" +
+            "</tr>" +
+            "</table>" +
+
+            "<!-- Title & Context -->" +
+            "<h2 style='color: #0f172a; font-size: 22px; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.02em;'>Thank you for your purchase!</h2>" +
+
+            "<p style='color: #334155; font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;'>Hello,</p>" +
+            "<p style='color: #334155; font-size: 15px; line-height: 1.6; margin: 0 0 28px 0;'>We have successfully processed your transaction. Your official invoice has been generated and is attached to this email as a PDF document for your records.</p>" +
+
+            "<!-- Call to Action -->" +
+            "<div style='text-align: center; margin-bottom: 36px;'>" +
+            "<a href='https://support.lumi-insert.my.id' style='background-color: #0f172a; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600; display: inline-block; letter-spacing: 0.01em;'>Visit Support Center &rarr;</a>" +
+            "</div>" +
+
+            "<hr style='border: 0; border-top: 1px solid #f1f5f9; margin: 0 0 24px 0;' />" +
+
+            "<!-- Footer -->" +
+            "<div style='text-align: center; font-size: 12px; color: #94a3b8; line-height: 1.5;'>" +
+            "<p style='margin: 0 0 4px 0; font-weight: 500;'>LUMI Insert Inc. &bull; Official Billing Notification</p>" +
+            "<p style='margin: 0;'>If you have any questions regarding this charge, please contact our support team.</p>" +
+            "</div>" +
+
+            "</div>" +
+            "</div>";
+
+    private final String reportTemplate =
+        "<div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; padding: 40px 20px;'>" +
+            "<div style='max-width: 600px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>" +
+
+            "<!-- Brand Header -->" +
+            "<table width='100%' border='0' cellspacing='0' cellpadding='0' style='margin-bottom: 24px;'>" +
+            "<tr>" +
+            "<td align='left' valign='middle'>" +
+            "<img src='https://github.githubassets.com/assets/pull-shark-default-498c279a747d.png' alt='Logo' style='width: 42px; height: 42px; display: block;' />" +
+            "</td>" +
+            "<td align='right' valign='middle'>" +
+            "<span style='font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; background-color: #f1f5f9; padding: 6px 12px; border-radius: 20px;'>Executive Report</span>" +
+            "</td>" +
+            "</tr>" +
+            "</table>" +
+
+            "<!-- Title & Context -->" +
+            "<h2 style='color: #0f172a; font-size: 22px; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.02em;'>Performance Report Ready</h2>" +
+
+            "<p style='color: #334155; font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;'>Hello Owner,</p>" +
+            "<p style='color: #334155; font-size: 15px; line-height: 1.6; margin: 0 0 28px 0;'>Your periodic performance statistics report has been generated. Please find the detailed PDF document attached to this email for your review.</p>" +
+
+            "<!-- Call to Action -->" +
+            "<div style='text-align: center; margin-bottom: 36px;'>" +
+            "<a href='https://lumi-insert.my.id' style='background-color: #0f172a; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600; display: inline-block; letter-spacing: 0.01em;'>Open Interactive Dashboard &rarr;</a>" +
+            "</div>" +
+
+            "<hr style='border: 0; border-top: 1px solid #f1f5f9; margin: 0 0 24px 0;' />" +
+
+            "<!-- Footer -->" +
+            "<div style='text-align: center; font-size: 12px; color: #94a3b8; line-height: 1.5;'>" +
+            "<p style='margin: 0 0 4px 0; font-weight: 500;'>LUMI Insert Inc. &bull; Automated System Intelligence</p>" +
+            "<p style='margin: 0;'>You are receiving this automated email because you are registered as an account administrator.</p>" +
+            "</div>" +
+
+            "</div>" +
+            "</div>";
 
      /**
      * Sends a transaction invoice to a customer via email.
@@ -96,7 +159,7 @@ public class MailSenderServiceImpl implements MailSenderService {
         helper.setTo(request.email());
         helper.setFrom("noreply@lumi-insert.my.id");
         helper.setSubject("Transaction Invoice - " + dataDetail.invoiceId());
-        helper.setText(template, true); 
+        helper.setText(transactionTemplate, true);
         helper.addAttachment(dataDetail.customerName() + "-" + dataDetail.invoiceId() + ".pdf", new ByteArrayResource(pdfByte.readAllBytes()));
          
         sender.send(mimeMessage);
@@ -128,7 +191,7 @@ public class MailSenderServiceImpl implements MailSenderService {
         helper.setTo("kelvinkho050@gmail.com");
         helper.setFrom("noreply@lumi-insert.my.id");
         helper.setSubject("Products statistics - Daily");
-        helper.setText(template, true); 
+        helper.setText(reportTemplate, true);
         helper.addAttachment( "Products statistics" + startDate + "-" + endDate + ".pdf", new ByteArrayResource(pdfByte.readAllBytes()));
          
         sender.send(mimeMessage);

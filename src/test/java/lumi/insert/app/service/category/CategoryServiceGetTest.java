@@ -106,7 +106,7 @@ public class CategoryServiceGetTest extends BaseCategoryServiceTest{
             new CategoryResponse(1L, "Smartphone", null, true, null, null)
         );
 
-        cachedCategories.put(cacheKey, new SliceImpl<>(smartphone));
+        cachedCategories.put(cacheKey, new SliceIndex<>(new SliceImpl<>(smartphone)));
 
         SliceIndex<CategoryResponse> categories = categoryService.getCategories(request);
         assertNotNull(categories);

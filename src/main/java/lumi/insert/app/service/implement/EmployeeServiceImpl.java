@@ -144,7 +144,7 @@ public class EmployeeServiceImpl implements EmployeeService{
     )
     public SliceIndex<EmployeeResponse> getEmployees(PaginationRequest request) {
         log.info("Listing employees page={}, size={}", request.getPage(), request.getSize());
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").ascending());
         Slice<Employee> employees = employeeRepository.findAll(pageable);
 
         Slice<EmployeeResponse> result = employees.map(employeeMapper::createDtoResponseFromEmployee);

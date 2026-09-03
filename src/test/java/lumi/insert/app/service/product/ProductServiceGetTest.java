@@ -366,7 +366,7 @@ public class ProductServiceGetTest extends BaseProductServiceTest{
             .build()
     );
 
-    cachedProducts.put(cacheKey, new SliceImpl<>(mockResponseList));
+    cachedProducts.put(cacheKey, new SliceIndex<>(new SliceImpl<>(mockResponseList)));
 
     SliceIndex<ProductResponse> products = productService.getProductsByRequests(request);
     assertNotNull(products);

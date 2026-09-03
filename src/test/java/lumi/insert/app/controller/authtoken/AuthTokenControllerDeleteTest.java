@@ -24,6 +24,7 @@ public class AuthTokenControllerDeleteTest extends BaseAuthTokenControllerTest{
         Cookie cookie = new Cookie("refreshToken", "someRefreshToken");
         mockMvc.perform(
             delete("/api/auth/logout")
+            .header("Authorization", "Bearer aaaxawf")
             .with(csrf())
             .cookie(cookie)  
         )
@@ -31,7 +32,7 @@ public class AuthTokenControllerDeleteTest extends BaseAuthTokenControllerTest{
         .andExpect(status().isNoContent())
         .andExpect(cookie().exists("refreshToken"))
         .andExpect(cookie().maxAge("refreshToken", 0));
-        verify(authTokenService, times(1)).deleteRefreshToken(any(),"someRefreshToken");
+        verify(authTokenService, times(1)).deleteRefreshToken(any(),eq("someRefreshToken"));
     }
 
     @Test

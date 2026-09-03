@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.criteria.Predicate;
 
+import lumi.insert.app.activitycore.entity.ActivityLog;
+import lumi.insert.app.dto.request.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -18,15 +20,6 @@ import lumi.insert.app.core.entity.Supply;
 import lumi.insert.app.core.entity.SupplyPayment;
 import lumi.insert.app.core.entity.Transaction;
 import lumi.insert.app.core.entity.TransactionPayment;
-import lumi.insert.app.dto.request.CustomerGetByFilter;
-import lumi.insert.app.dto.request.PaginationRequest;
-import lumi.insert.app.dto.request.ProductGetByFilter;
-import lumi.insert.app.dto.request.StockCardGetByFilter;
-import lumi.insert.app.dto.request.SupplierGetByFilter;
-import lumi.insert.app.dto.request.SupplyGetByFilter;
-import lumi.insert.app.dto.request.SupplyPaymentGetByFilter;
-import lumi.insert.app.dto.request.TransactionGetByFilter;
-import lumi.insert.app.dto.request.TransactionPaymentGetByFilter;
 
 /**
  * Entities JpaSpecification Generator.
@@ -204,6 +197,31 @@ public class JpaSpecGenerator {
 
             return builder.and(predicates);
         };
+        return specification;
+    }
+
+    public Specification<ActivityLog> activityLogSpecification(ActivityLogFilterRequest request){
+        Specification<ActivityLog> specification = (root, criteria, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if(request.getEntityName() != null){
+                predicates.add(builder.equal(root.get("entityName"), request.getEntityName()));
+            }
+            if(request.getEntityId() != null){
+                predicates.add(builder.equal(root.get("entityId"), request.getEntityId()));
+            }
+            if(request.getAction() != null){
+                predicates.add(builder.equal(root.get("action"), request.getAction()));
+            }
+            if(request.getCreatedBy() != null){
+                predicates.add(builder.equal(root.get("createdBy"), request.getCreatedBy()));
+            }
+            if(request.getIpAddress() != null){
+                predicates.add(builder.equal(root.get("ipAddress"), request.getIpAddress()));
+            }
+            if(request.getMinCreatedAt() != null && request.getMaxCreatedAt() != null) predicates.add(builder.between(root.get("createdAt"), request.getMinCreatedAt(), request.getMaxCreatedAt()));
+            return builder.and(predicates);
+        };
+
         return specification;
     }
 }

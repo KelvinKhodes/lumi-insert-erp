@@ -2,9 +2,13 @@ package lumi.insert.app;
 
 import java.util.Collections;
 
+import org.mockito.Answers;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 @SuppressWarnings("resource")
@@ -18,6 +22,12 @@ public abstract class TestContainerTest {
             .withTmpFs(Collections.singletonMap("/var/lib/postgresql", "rw"));
         container.start();
     }
+
+    @MockitoBean(answers = Answers.RETURNS_DEEP_STUBS)
+    public RedisTemplate<String, Object> redisTemplate;
+
+    @MockitoBean
+    public ValueOperations<String, Object> valueOperations;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

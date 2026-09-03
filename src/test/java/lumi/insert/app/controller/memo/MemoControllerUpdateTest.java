@@ -14,6 +14,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import lumi.insert.app.dto.request.MemoUpdateRequest;
@@ -82,7 +86,12 @@ public class MemoControllerUpdateTest extends BaseMemoControllerTest{
 
     @Test
     @WithMockUser(roles = {"FINANCE"})
-    void archiveMemoAPI_notOwner_returnForbidden() throws Exception{ 
+    void archiveMemoAPI_notOwner_returnForbidden() throws Exception{
+        UsernamePasswordAuthenticationToken authFinance = new UsernamePasswordAuthenticationToken(employeeLogin, null, finance);
+        SecurityContext context = SecurityContextHolder.getContext();
+        context.setAuthentication(authFinance);
+        TestSecurityContextHolder.setContext(context);
+
         mockMvc.perform(
             post("/api/memos/1/archive")
             .accept(MediaType.APPLICATION_JSON_VALUE)  
@@ -91,6 +100,9 @@ public class MemoControllerUpdateTest extends BaseMemoControllerTest{
         .andExpect(status().isForbidden())
         .andExpect(jsonPath("$.errors").isNotEmpty())
         .andExpect(jsonPath("$.data").isEmpty());
+
+        SecurityContextHolder.clearContext();
+        TestSecurityContextHolder.clearContext();
     }
 
     @Test

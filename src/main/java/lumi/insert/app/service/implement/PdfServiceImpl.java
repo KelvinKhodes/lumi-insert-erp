@@ -5,9 +5,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import org.openpdf.text.Document; 
+import lumi.insert.app.utils.generator.NumberFormatter;
+import org.openpdf.text.Document;
 import org.openpdf.text.Element;
 import org.openpdf.text.ExceptionConverter;
 import org.openpdf.text.Font;
@@ -36,6 +38,9 @@ import lumi.insert.app.service.PdfService;
 import lumi.insert.app.utils.generator.PdfCellBuilder;
 import lumi.insert.app.utils.generator.PdfPageTemplate;
 
+import static lumi.insert.app.utils.generator.NumberFormatter.convertToCurrency;
+import static lumi.insert.app.utils.generator.NumberFormatter.normalizeBigDecimal;
+
 /**
  * Implementation of {@link PdfService} generating pdf document as bytes.
  * <p>
@@ -53,8 +58,9 @@ import lumi.insert.app.utils.generator.PdfPageTemplate;
 @Slf4j
 public class PdfServiceImpl implements PdfService{
  
-    private Font helveticaBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
+    private final Font helveticaBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
 
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     /**
      * Convert a {@link SupplyDetailResponse} into templated PDF as bytes
      * @param data a source of data {@link SupplyDetailResponse}
@@ -87,11 +93,11 @@ public class PdfServiceImpl implements PdfService{
                         FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14));
                 companyName.setAlignment(Element.ALIGN_LEFT);
                 
-                Paragraph address = new Paragraph("Invoice No: " + data.invoiceId() +"\n" +
+                Paragraph address = new Paragraph("No. Invoice: " + data.invoiceId() +"\n" +
                         "Supplier: " + data.supplierName() +"\n" +
                         "Total Items: " + data.totalItems() + "\n" +
-                        "Issued At: " + data.createdAt() + "\n", 
-                        FontFactory.getFont(FontFactory.HELVETICA, 10));
+                        "Date: " + dateTimeFormatter.format(data.createdAt()) + "\n",
+                        FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.LIGHT_GRAY));
                 address.setAlignment(Element.ALIGN_LEFT);
 
                 detailsCell.addElement(companyName);
@@ -100,26 +106,27 @@ public class PdfServiceImpl implements PdfService{
                 issuedFor.setSpacingAfter(5f);
                 document.add(issuedFor);
 
-                PdfPTable itemsTable = new PdfPTable(4); 
+                PdfPTable itemsTable = new PdfPTable(5);
                 itemsTable.setWidthPercentage(100f);
-                itemsTable.setWidths(new float[]{1f, 6f, 2f, 3f});  
+                itemsTable.setWidths(new float[]{0.5f, 5f, 1.5f, 2f, 3f});
                 itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("No", helveticaBold)).color(ExtendedColor.LIGHT_GRAY).vAlign(Element.ALIGN_CENTER).padding(2f).build());
                 itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Product", helveticaBold)).color(ExtendedColor.LIGHT_GRAY).vAlign(Element.ALIGN_CENTER).build());
                 itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Quantity", helveticaBold)).hAlign(Element.ALIGN_RIGHT).vAlign(Element.ALIGN_CENTER).color(ExtendedColor.LIGHT_GRAY).build());
-                itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Price", helveticaBold)).hAlign(Element.ALIGN_RIGHT).vAlign(Element.ALIGN_CENTER).color(ExtendedColor.LIGHT_GRAY).build()); 
-                
+                itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Price", helveticaBold)).hAlign(Element.ALIGN_RIGHT).vAlign(Element.ALIGN_CENTER).color(ExtendedColor.LIGHT_GRAY).build());
+                itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Total", helveticaBold)).hAlign(Element.ALIGN_RIGHT).vAlign(Element.ALIGN_CENTER).color(ExtendedColor.LIGHT_GRAY).build());
+
                 List<SupplyItemResponse> supplyItems = data.supplyItems();
 
                 int i = 1;
                 for (SupplyItemResponse item : supplyItems) {
-                Color color = null;
-                if(item.quantity().compareTo(BigDecimal.ZERO) < 0) color = ExtendedColor.RED; 
-                itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell(String.valueOf(i), color));
-                itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell(item.product().name(), color));
-                itemsTable.addCell(new PdfCellBuilder().paragraph(item.quantity().toString()).hAlign(Element.ALIGN_RIGHT).color(color).build());
-
-                itemsTable.addCell(new PdfCellBuilder().paragraph(item.price().toString()).hAlign(Element.ALIGN_RIGHT).color(color).build()); 
-                i++;
+                        Color color = null;
+                        if(item.quantity().compareTo(BigDecimal.ZERO) < 0) color = ExtendedColor.RED;
+                        itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell(String.valueOf(i), color));
+                        itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell(item.product().name(), color));
+                        itemsTable.addCell(new PdfCellBuilder().paragraph(normalizeBigDecimal(item.quantity(), 2).toString()).hAlign(Element.ALIGN_RIGHT).color(color).build());
+                        itemsTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(item.price())).hAlign(Element.ALIGN_RIGHT).color(color).build());
+                        itemsTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(item.price().multiply(item.quantity()))).hAlign(Element.ALIGN_RIGHT).color(color).build());
+                        i++;
                 }
                 document.add(itemsTable);
 
@@ -132,7 +139,7 @@ public class PdfServiceImpl implements PdfService{
 
                 PdfPTable totalTable = new PdfPTable(4); 
                 totalTable.setWidthPercentage(100f);
-                totalTable.setWidths(new float[]{1f, 6f, 2f, 3f});  
+                totalTable.setWidths(new float[]{1f, 4f, 2f, 3f});
                 totalTable.setHorizontalAlignment(Element.ALIGN_RIGHT); 
 
                 Paragraph addInformation = new Paragraph("Additional Information:"); 
@@ -142,24 +149,24 @@ public class PdfServiceImpl implements PdfService{
                 infoCell.setHorizontalAlignment(Element.ALIGN_LEFT);
                 totalTable.addCell(infoCell); 
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Subtotal", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.subTotal().toString()).hAlign(Element.ALIGN_RIGHT).build());
+                totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.subTotal())).hAlign(Element.ALIGN_RIGHT).build());
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Add. Fee", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalFee().toString()).hAlign(Element.ALIGN_RIGHT).build());
+                totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalFee())).hAlign(Element.ALIGN_RIGHT).build());
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Discount", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalDiscount().toString()).hAlign(Element.ALIGN_RIGHT).build());
+                totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalDiscount())).hAlign(Element.ALIGN_RIGHT).build());
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Grandtotal", ExtendedColor.LIGHT_GRAY));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.grandTotal().toString()).color(ExtendedColor.LIGHT_GRAY).hAlign(Element.ALIGN_RIGHT).build());
+                totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.grandTotal())).color(ExtendedColor.LIGHT_GRAY).hAlign(Element.ALIGN_RIGHT).build());
 
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
 
-                Paragraph adjustment = new Paragraph("Adjustment"); 
+                Paragraph adjustment = new Paragraph("Payment");
                 PdfPCell adjustmentCell = new PdfPCell(adjustment);
                 adjustmentCell.setColspan(2);
                 adjustmentCell.setBorder(0);
@@ -171,30 +178,44 @@ public class PdfServiceImpl implements PdfService{
                         .map(item -> item.quantity().multiply(item.price()))
                         .reduce(BigDecimal.ZERO,  BigDecimal::add);
 
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Refund value", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(String.valueOf(refundedValue)).hAlign(Element.ALIGN_RIGHT).build());
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Unpaid", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalUnpaid().toString()).hAlign(Element.ALIGN_RIGHT).build());
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Paid", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalPaid().toString()).hAlign(Element.ALIGN_RIGHT).build());
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Un-refunded", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalUnrefunded().toString()).hAlign(Element.ALIGN_RIGHT).build());
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Refunded", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalRefunded().toString()).hAlign(Element.ALIGN_RIGHT).build());
+                if(refundedValue.compareTo(BigDecimal.ZERO) != 0){
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Refund value", null));
+                        totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(refundedValue)).hAlign(Element.ALIGN_RIGHT).build());
+                }
+
+                if(data.totalUnpaid().compareTo(BigDecimal.ZERO) != 0){
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Unpaid", null));
+                        totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalUnpaid())).hAlign(Element.ALIGN_RIGHT).build());
+                }
+
+                if(data.totalPaid().compareTo(BigDecimal.ZERO) != 0){
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Paid", null));
+                        totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalPaid())).hAlign(Element.ALIGN_RIGHT).build());
+                }
+
+                if(data.totalUnrefunded().compareTo(BigDecimal.ZERO) != 0){
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Un-refunded", null));
+                        totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalUnrefunded())).hAlign(Element.ALIGN_RIGHT).build());
+                }
+
+                if(data.totalRefunded().compareTo(BigDecimal.ZERO) != 0){
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Refunded", null));
+                        totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalRefunded())).hAlign(Element.ALIGN_RIGHT).build());
+                }
 
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                Paragraph paragraph = new Paragraph("\n\n\n\n\n\n\nJekael\nWarehouse Staff" ); 
+                Paragraph paragraph = new Paragraph("\n\n\n\n\n\n\n\nWarehouse Staff" );
                 PdfPCell issuer = new PdfPCell(paragraph);
                 issuer.setColspan(4);
                 issuer.setBorder(0);
@@ -243,12 +264,12 @@ public class PdfServiceImpl implements PdfService{
                 Paragraph companyName = new Paragraph("Transaction Order", 
                         FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14));
                 companyName.setAlignment(Element.ALIGN_LEFT);
-                
-                Paragraph address = new Paragraph("Invoice No: " + data.invoiceId() +"\n" +
+
+                Paragraph address = new Paragraph("No. Invoice: " + data.invoiceId() +"\n" +
                         "Customer: " + data.customerName() +"\n" +
                         "Total Items: " + data.totalItems() + "\n" +
-                        "Issued At: " + data.createdAt() + "\n", 
-                        FontFactory.getFont(FontFactory.HELVETICA, 10));
+                        "Date: " + dateTimeFormatter.format(data.createdAt()) + "\n",
+                        FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.LIGHT_GRAY));
                 address.setAlignment(Element.ALIGN_LEFT);
 
                 detailsCell.addElement(companyName);
@@ -257,13 +278,14 @@ public class PdfServiceImpl implements PdfService{
                 issuedFor.setSpacingAfter(5f);
                 document.add(issuedFor);
 
-                PdfPTable itemsTable = new PdfPTable(4); 
+                PdfPTable itemsTable = new PdfPTable(5);
                 itemsTable.setWidthPercentage(100f);
-                itemsTable.setWidths(new float[]{1f, 6f, 2f, 3f});  
+                itemsTable.setWidths(new float[]{1f, 4f, 1.5f, 2f, 3f});
                 itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("No", helveticaBold)).color(ExtendedColor.LIGHT_GRAY).vAlign(Element.ALIGN_CENTER).padding(2f).build());
                 itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Product", helveticaBold)).color(ExtendedColor.LIGHT_GRAY).vAlign(Element.ALIGN_CENTER).build());
                 itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Quantity", helveticaBold)).hAlign(Element.ALIGN_RIGHT).vAlign(Element.ALIGN_CENTER).color(ExtendedColor.LIGHT_GRAY).build());
-                itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Price", helveticaBold)).hAlign(Element.ALIGN_RIGHT).vAlign(Element.ALIGN_CENTER).color(ExtendedColor.LIGHT_GRAY).build()); 
+                itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Price", helveticaBold)).hAlign(Element.ALIGN_RIGHT).vAlign(Element.ALIGN_CENTER).color(ExtendedColor.LIGHT_GRAY).build());
+                itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Total", helveticaBold)).hAlign(Element.ALIGN_RIGHT).vAlign(Element.ALIGN_CENTER).color(ExtendedColor.LIGHT_GRAY).build());
                 
                 List<TransactionItemResponse> items = data.transactionItems();
 
@@ -273,9 +295,10 @@ public class PdfServiceImpl implements PdfService{
                         if(item.quantity().compareTo(BigDecimal.ZERO) < 0) color = ExtendedColor.RED; 
                         itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell(String.valueOf(i), color));
                         itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell(item.productName(), color));
-                        itemsTable.addCell(new PdfCellBuilder().paragraph(item.quantity().toString()).hAlign(Element.ALIGN_RIGHT).color(color).build());
+                        itemsTable.addCell(new PdfCellBuilder().paragraph(normalizeBigDecimal(item.quantity(), 2).toString()).hAlign(Element.ALIGN_RIGHT).color(color).build());
 
-                        itemsTable.addCell(new PdfCellBuilder().paragraph(item.price().toString()).hAlign(Element.ALIGN_RIGHT).color(color).build()); 
+                        itemsTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(item.price())).hAlign(Element.ALIGN_RIGHT).color(color).build());
+                        itemsTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(item.price().multiply(item.quantity()))).hAlign(Element.ALIGN_RIGHT).color(color).build());
                         i++;
                 }
                 document.add(itemsTable);
@@ -292,31 +315,31 @@ public class PdfServiceImpl implements PdfService{
                 totalTable.setWidths(new float[]{1f, 6f, 2f, 3f});  
                 totalTable.setHorizontalAlignment(Element.ALIGN_RIGHT); 
 
-                Paragraph addInformation = new Paragraph("Additional Information:"); 
+                Paragraph addInformation = new Paragraph("Additional Information:");
                 PdfPCell infoCell = new PdfPCell(addInformation);
                 infoCell.setColspan(2);
                 infoCell.setBorder(0);
                 infoCell.setHorizontalAlignment(Element.ALIGN_LEFT);
                 totalTable.addCell(infoCell); 
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Subtotal", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.subTotal().toString()).hAlign(Element.ALIGN_RIGHT).build());
+                totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.subTotal())).hAlign(Element.ALIGN_RIGHT).build());
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Add. Fee", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalFee().toString()).hAlign(Element.ALIGN_RIGHT).build());
+                totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalFee())).hAlign(Element.ALIGN_RIGHT).build());
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Discount", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalDiscount().toString()).hAlign(Element.ALIGN_RIGHT).build());
+                totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalDiscount())).hAlign(Element.ALIGN_RIGHT).build());
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Grandtotal", ExtendedColor.LIGHT_GRAY));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.grandTotal().toString()).color(ExtendedColor.LIGHT_GRAY).hAlign(Element.ALIGN_RIGHT).build());
+                totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.grandTotal())).color(ExtendedColor.LIGHT_GRAY).hAlign(Element.ALIGN_RIGHT).build());
 
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
 
-                Paragraph adjustment = new Paragraph("Adjustment"); 
+                Paragraph adjustment = new Paragraph("Payment");
                 PdfPCell adjustmentCell = new PdfPCell(adjustment);
                 adjustmentCell.setColspan(2);
                 adjustmentCell.setBorder(0);
@@ -328,30 +351,44 @@ public class PdfServiceImpl implements PdfService{
                         .map(item -> item.quantity().multiply(item.price()))
                         .reduce(BigDecimal.ZERO,  BigDecimal::add);
 
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Refund value", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(String.valueOf(refundedValue)).hAlign(Element.ALIGN_RIGHT).build());
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Unpaid", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalUnpaid().toString()).hAlign(Element.ALIGN_RIGHT).build());
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Paid", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalPaid().toString()).hAlign(Element.ALIGN_RIGHT).build());
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Un-refunded", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalUnrefunded().toString()).hAlign(Element.ALIGN_RIGHT).build());
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Refunded", null));
-                totalTable.addCell(new PdfCellBuilder().paragraph(data.totalRefunded().toString()).hAlign(Element.ALIGN_RIGHT).build());
+                if(refundedValue.compareTo(BigDecimal.ZERO) != 0){
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Refund value", null));
+                        totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(refundedValue)).hAlign(Element.ALIGN_RIGHT).build());
+                }
+
+                if(data.totalUnpaid().compareTo(BigDecimal.ZERO) != 0){
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Unpaid", null));
+                        totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalUnpaid())).hAlign(Element.ALIGN_RIGHT).build());
+                }
+
+                if(data.totalPaid().compareTo(BigDecimal.ZERO) != 0){
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Paid", null));
+                        totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalPaid())).hAlign(Element.ALIGN_RIGHT).build());
+                }
+
+                if(data.totalUnrefunded().compareTo(BigDecimal.ZERO) != 0){
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Un-refunded", null));
+                        totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalUnrefunded())).hAlign(Element.ALIGN_RIGHT).build());
+                }
+
+                if(data.totalRefunded().compareTo(BigDecimal.ZERO) != 0){
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("Refunded", null));
+                        totalTable.addCell(new PdfCellBuilder().paragraph(convertToCurrency(data.totalRefunded())).hAlign(Element.ALIGN_RIGHT).build());
+                }
 
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
                 totalTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
-                Paragraph paragraph = new Paragraph("\n\n\n\n\n\n\nJekael\nCashier Staff" ); 
+                Paragraph paragraph = new Paragraph("\n\n\n\n\n\n\n\nCashier Staff" );
                 PdfPCell issuer = new PdfPCell(paragraph);
                 issuer.setColspan(4);
                 issuer.setBorder(0);
@@ -371,7 +408,7 @@ public class PdfServiceImpl implements PdfService{
 
     /**
      * Convert a {@link TransactionItemStatisticResponse} into templated PDF as bytes
-     * @param data a source of data {@link TransactionItemStatisticResponse}
+     * @param statistic a source of data {@link TransactionItemStatisticResponse}
      * @return {@link ByteArrayInputStream}
      */
     @Override
@@ -409,7 +446,7 @@ public class PdfServiceImpl implements PdfService{
                         "Ttl. Unique product sold: " + sales.size() + "\n" +
                         "Ttl. Unique product refund: " + refunds.size() + "\n" +
                         "Product quantity below minimum: " + oosProducts.size() + "\n", 
-                        FontFactory.getFont(FontFactory.HELVETICA, 10));
+                        FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.LIGHT_GRAY));
                 information.setAlignment(Element.ALIGN_LEFT);
 
                 detailsCell.addElement(subHeader);
@@ -421,22 +458,29 @@ public class PdfServiceImpl implements PdfService{
                 Paragraph firstSub = new Paragraph("Best selling products: ", 
                         FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
                 firstSub.setAlignment(Element.ALIGN_CENTER);
+                firstSub.setSpacingAfter(1.0f);
 
                 PdfPTable itemsTable = new PdfPTable(3); 
                 itemsTable.setWidthPercentage(100f);
                 itemsTable.setWidths(new float[]{1f, 6f, 3f});  
                 itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("No", helveticaBold)).color(ExtendedColor.LIGHT_GRAY).vAlign(Element.ALIGN_CENTER).padding(2f).build());
                 itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Product", helveticaBold)).color(ExtendedColor.LIGHT_GRAY).vAlign(Element.ALIGN_CENTER).build());
-                itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Total Sold (NET)", helveticaBold)).hAlign(Element.ALIGN_RIGHT).vAlign(Element.ALIGN_CENTER).color(ExtendedColor.LIGHT_GRAY).build()); 
+                itemsTable.addCell(new PdfCellBuilder().paragraph(new Paragraph("Total Sold", helveticaBold)).hAlign(Element.ALIGN_RIGHT).vAlign(Element.ALIGN_CENTER).color(ExtendedColor.LIGHT_GRAY).build());
                 
                 int i = 1;
                 for (ProductSale product : sales) {  
                         itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell(String.valueOf(i), null));
                         itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell(product.productName(), null));
-                        itemsTable.addCell(new PdfCellBuilder().paragraph(product.totalSold().toString() + "Pcs" ).hAlign(Element.ALIGN_RIGHT).build());
+                        itemsTable.addCell(new PdfCellBuilder().paragraph(normalizeBigDecimal(product.totalSold(), 2).toString() + "Pcs" ).hAlign(Element.ALIGN_RIGHT).build());
         
                         i++;
                 }
+
+                if(i == 1) {
+                        itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell("There are no sales during this period", null));
+                }
+
                 document.add(firstSub);
                 document.add(itemsTable);
 
@@ -445,6 +489,7 @@ public class PdfServiceImpl implements PdfService{
                 Paragraph secondsSub = new Paragraph("Most refunded products: ", 
                         FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
                 secondsSub.setAlignment(Element.ALIGN_CENTER);
+                secondsSub.setSpacingAfter(1.0f);
 
                 PdfPTable refundTable = new PdfPTable(3); 
                 refundTable.setWidthPercentage(100f);
@@ -457,9 +502,14 @@ public class PdfServiceImpl implements PdfService{
                 for (ProductRefund product : refunds) {  
                         refundTable.addCell(PdfCellBuilder.getUnborderedColouredCell(String.valueOf(ii), null));
                         refundTable.addCell(PdfCellBuilder.getUnborderedColouredCell(product.productName(), null));
-                        refundTable.addCell(new PdfCellBuilder().paragraph(product.totalRefunded().abs() + "Pcs" ).hAlign(Element.ALIGN_RIGHT).build());
+                        refundTable.addCell(new PdfCellBuilder().paragraph(normalizeBigDecimal(product.totalRefunded().abs(), 2) + "Pcs" ).hAlign(Element.ALIGN_RIGHT).build());
         
                 ii++;
+                }
+
+                if(ii == 1) {
+                        itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell("There are no refunds during this period", null));
                 }
 
                 document.add(secondsSub);
@@ -470,6 +520,7 @@ public class PdfServiceImpl implements PdfService{
                 Paragraph thirdSub = new Paragraph("Out of stock products: ", 
                         FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
                 thirdSub.setAlignment(Element.ALIGN_CENTER);
+                thirdSub.setSpacingAfter(1.0f);
 
                 PdfPTable oosTable = new PdfPTable(4); 
                 oosTable.setWidthPercentage(100f);
@@ -483,10 +534,15 @@ public class PdfServiceImpl implements PdfService{
                 for (ProductOutOfStock product : oosProducts) {  
                         oosTable.addCell(PdfCellBuilder.getUnborderedColouredCell(String.valueOf(iii), null));
                         oosTable.addCell(PdfCellBuilder.getUnborderedColouredCell(product.name(), null));
-                        oosTable.addCell(new PdfCellBuilder().paragraph(product.stockQuantity().toString() + "Pcs" ).hAlign(Element.ALIGN_RIGHT).build());
-                        oosTable.addCell(new PdfCellBuilder().paragraph(product.stockMinimum().toString() + "Pcs" ).hAlign(Element.ALIGN_RIGHT).build());
+                        oosTable.addCell(new PdfCellBuilder().paragraph(normalizeBigDecimal(product.stockQuantity(), 2).toString() + "Pcs" ).hAlign(Element.ALIGN_RIGHT).build());
+                        oosTable.addCell(new PdfCellBuilder().paragraph(normalizeBigDecimal(product.stockMinimum(), 2).toString() + "Pcs" ).hAlign(Element.ALIGN_RIGHT).build());
 
                         iii++;
+                }
+
+                if(iii == 1) {
+                        itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell("", null));
+                        itemsTable.addCell(PdfCellBuilder.getUnborderedColouredCell("There are no out of stock products", null));
                 }
 
                 document.add(thirdSub);
