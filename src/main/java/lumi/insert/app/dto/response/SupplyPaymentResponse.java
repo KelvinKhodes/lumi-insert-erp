@@ -2,6 +2,7 @@ package lumi.insert.app.dto.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -25,6 +26,9 @@ public record SupplyPaymentResponse(
     
     @Schema(description = "Flag indicating if this payment is a refund from the supplier (e.g., for returned goods)", example = "false")
     Boolean isForRefund,
+
+    @Schema(description = "Pictures url that represent and desribe the payments")
+    List<String> pictureUrl,
 
     @Schema(description = "Timestamp when the PAYMENT was added to the supply")
     LocalDateTime createdAt,
