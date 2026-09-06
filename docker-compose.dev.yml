@@ -5,7 +5,7 @@ services:
     container_name: app
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx800m -XX:ActiveProcessorCount=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -XX:TieredStopAtLevel=1
+      - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms512m -Xmx900m -Xmn280m -XX:+UseG1GC -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Djava.util.concurrent.ForkJoinPool.common.parallelism=2
       - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD}
       - SMTP_MAIL_USERNAME=${SMTP_MAIL_USERNAME}
       - SMTP_MAIL_PASSWORD=${SMTP_MAIL_PASSWORD}
@@ -30,8 +30,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.4'
-          memory: 900M
+          cpus: '2.2'
+          memory: 1300M
         reservations:
           memory: 256M
 
