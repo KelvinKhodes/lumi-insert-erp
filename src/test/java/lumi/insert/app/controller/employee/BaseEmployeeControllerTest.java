@@ -16,7 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 @WithMockUser(username = "admin", roles = "OWNER")
 public abstract class BaseEmployeeControllerTest extends BaseControllerTest {
       
-    EmployeeResponse employeeResponse = new EmployeeResponse(UUID.randomUUID(), "employeeU", "employeeF", EmployeeRole.CASHIER, LocalDateTime.now());
+    EmployeeResponse employeeResponse = new EmployeeResponse(UUID.randomUUID(), "employeeU", "employeeF", EmployeeRole.CASHIER, null, LocalDateTime.now());
  
     MockMultipartFile mockMultipartFile = new MockMultipartFile(
         "files", 

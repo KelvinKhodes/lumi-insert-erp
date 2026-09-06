@@ -13,9 +13,9 @@ import lumi.insert.app.dto.response.SupplyPaymentResponse;
 @WithMockUser(username = "admin", roles = "FINANCE")
 public abstract class BaseSupplyPaymentControllerTest extends BaseControllerTest{
  
-    SupplyPaymentResponse supplyPaymentResponse = new SupplyPaymentResponse(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(10000L), "CLIENT", "LUMI", false,null ,null);
+    SupplyPaymentResponse supplyPaymentResponse = new SupplyPaymentResponse(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(10000L), "CLIENT", "LUMI", false, null,null ,null);
 
-    SupplyPaymentResponse supplyRefundResponse = new SupplyPaymentResponse(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(10000L), "LUMI", "CLIENT", true, null, null);
+    SupplyPaymentResponse supplyRefundResponse = new SupplyPaymentResponse(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(10000L), "LUMI", "CLIENT", true, null, null, null);
 
     MockMultipartFile mockMultipartFile = new MockMultipartFile(
         "files", 

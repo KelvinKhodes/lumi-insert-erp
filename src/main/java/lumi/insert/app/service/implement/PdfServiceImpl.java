@@ -97,7 +97,7 @@ public class PdfServiceImpl implements PdfService{
                         "Supplier: " + data.supplierName() +"\n" +
                         "Total Items: " + data.totalItems() + "\n" +
                         "Date: " + dateTimeFormatter.format(data.createdAt()) + "\n",
-                        FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.LIGHT_GRAY));
+                        FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.DARK_GRAY));
                 address.setAlignment(Element.ALIGN_LEFT);
 
                 detailsCell.addElement(companyName);
@@ -269,7 +269,7 @@ public class PdfServiceImpl implements PdfService{
                         "Customer: " + data.customerName() +"\n" +
                         "Total Items: " + data.totalItems() + "\n" +
                         "Date: " + dateTimeFormatter.format(data.createdAt()) + "\n",
-                        FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.LIGHT_GRAY));
+                        FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.DARK_GRAY));
                 address.setAlignment(Element.ALIGN_LEFT);
 
                 detailsCell.addElement(companyName);
@@ -446,7 +446,7 @@ public class PdfServiceImpl implements PdfService{
                         "Ttl. Unique product sold: " + sales.size() + "\n" +
                         "Ttl. Unique product refund: " + refunds.size() + "\n" +
                         "Product quantity below minimum: " + oosProducts.size() + "\n", 
-                        FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.LIGHT_GRAY));
+                        FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.DARK_GRAY));
                 information.setAlignment(Element.ALIGN_LEFT);
 
                 detailsCell.addElement(subHeader);

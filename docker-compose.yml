@@ -4,7 +4,7 @@ services:
     container_name: app
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms256m -Xmx800m -XX:ActiveProcessorCount=2 -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -XX:TieredStopAtLevel=1
+      - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms512m -Xmx900m -Xmn280m -XX:+UseG1GC -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Djava.util.concurrent.ForkJoinPool.common.parallelism=2
       - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD}
       - SMTP_MAIL_USERNAME=${SMTP_MAIL_USERNAME}
       - SMTP_MAIL_PASSWORD=${SMTP_MAIL_PASSWORD}
@@ -29,8 +29,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.4'
-          memory: 900M
+          cpus: '2.2'
+          memory: 1300M
         reservations:
           memory: 256M
 
@@ -46,10 +46,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.40'
-          memory: 256M
+          cpus: '0.30'
+          memory: 450M
         reservations:
-          memory: 128M
+          memory: 150M
 
   rabbit-mq:
     image: rabbitmq:3-management-alpine
@@ -59,7 +59,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.40'
+          cpus: '0.20'
           memory: 300M
         reservations:
           memory: 150M
@@ -78,7 +78,7 @@ services:
       resources:
         limits:
           cpus: '0.10'
-          memory: 128M
+          memory: 150M
         reservations:
           memory: 32M
 
@@ -116,7 +116,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.15'
+          cpus: '0.10'
           memory: 128M
         reservations:
           memory: 64M
@@ -139,8 +139,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.20'
-          memory: 500M
+          cpus: '0.40'
+          memory: 700M
         reservations:
           memory: 150M
 
@@ -157,8 +157,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
+          cpus: '0.30'
+          memory: 400M
         reservations:
           memory: 128M
 

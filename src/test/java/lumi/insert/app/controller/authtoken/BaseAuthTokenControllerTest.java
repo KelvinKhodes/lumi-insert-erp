@@ -19,6 +19,6 @@ public abstract class BaseAuthTokenControllerTest extends BaseControllerTest {
     .username("testEmployee")
     .build();
 
-    AuthTokenResponse authTokenResponse = new AuthTokenResponse("someAccessToken", "someRefreshToken",new EmployeeResponse(null, null, null, null, null) , LocalDateTime.now().plusDays(7), LocalDateTime.now());
+    AuthTokenResponse authTokenResponse = new AuthTokenResponse("someAccessToken", "someRefreshToken",new EmployeeResponse(null, null, null, null, null, null) , LocalDateTime.now().plusDays(7), LocalDateTime.now());
 
 }

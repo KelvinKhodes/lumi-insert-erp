@@ -53,7 +53,7 @@ public class PdfPageTemplate extends PdfPageEventHelper{
             Paragraph address = new Paragraph("Jl. Batam Center No. 123, Kota Batam\n" +
                     "Email: support@lumi-insert.my.id | Telp: (0778) 123456\n" +
                     "Website: www.lumi-insert.my.id",
-                    FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.LIGHT_GRAY));
+                    FontFactory.getFont(FontFactory.HELVETICA, 10, ExtendedColor.DARK_GRAY));
             address.setAlignment(Element.ALIGN_RIGHT);
 
             detailsCell.addElement(companyName);

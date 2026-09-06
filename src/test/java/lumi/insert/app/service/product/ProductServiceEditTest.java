@@ -2,12 +2,21 @@ package lumi.insert.app.service.product;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
+import lumi.insert.app.core.entity.CustomerPicture;
+import lumi.insert.app.core.entity.nondatabase.CloudinaryResponse;
 import lumi.insert.app.dto.request.ProductCreateRequest;
+import lumi.insert.app.exception.DatabaseInternalException;
+import lumi.insert.app.exception.StorageActionException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +28,9 @@ import lumi.insert.app.dto.response.ProductResponse;
 import lumi.insert.app.exception.BoilerplateRequestException;
 import lumi.insert.app.exception.NotFoundEntityException;
 import org.springframework.cache.Cache;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 public class ProductServiceEditTest extends BaseProductServiceTest {
     @Test
@@ -312,5 +324,76 @@ public class ProductServiceEditTest extends BaseProductServiceTest {
         assertNull(cachedProductFirstPage.get("random"));
         assertNull(cachedProductResponse.get(savedProduct.getId()));
         assertFalse(setInactiveProduct.isActive());
+    }
+
+    @Test
+    @DisplayName("Should return correct string value, case 1: none failed")
+    void uploadProductPictures_validRequest() throws IOException {
+        MultipartFile[] files = {new MockMultipartFile("test", "faa".getBytes()), new MockMultipartFile("test1", "faa".getBytes())};
+        when(productRepositoryMock.findById(setupProduct.getId())).thenReturn(Optional.of(setupProduct));
+        when(storageService.uploadImageSync(any(), any(), any())).thenReturn(cloudinaryResponse);
+        String resultFromService = productServiceMock.uploadProductPictures(setupProduct.getId(), files);
+
+        assertTrue(resultFromService.contains("Upload product's pictures completed successfully for product with ID: 1"));
+        verify(storageService, times(2)).uploadImageSync(argThat(arg -> arg.length > 0), any(), eq("product"));
+        verify(productPictureRepository, times(2)).save(argThat(arg -> arg.getPictureUrl().equals(cloudinaryResponse.getSecureUrl())));
+
+        List<String> pictureUrl = setupProduct.getPictureUrl();
+        assertEquals(2, pictureUrl.size());
+        assertEquals(cloudinaryResponse.getSecureUrl(), pictureUrl.getFirst());
+    }
+
+    @Test
+    @DisplayName("Should return correct string value, case 2: 1 failed")
+    void uploadProductPictures_oneRequestFailed() throws IOException {
+        MultipartFile[] files = {new MockMultipartFile("test", "faa".getBytes()), new MockMultipartFile("test1", "error".getBytes())};
+        when(productRepositoryMock.findById(setupProduct.getId())).thenReturn(Optional.of(setupProduct));
+        when(storageService.uploadImageSync(eq("faa".getBytes()), any(), any())).thenReturn(cloudinaryResponse);
+        when(storageService.uploadImageSync(eq("error".getBytes()), any(), any())).thenThrow(new IOException());
+        String resultFromService = productServiceMock.uploadProductPictures(setupProduct.getId(), files);
+
+        assertTrue(resultFromService.contains("1 pictures failed to upload due to internal or provider problem, check your uploaded pictures and retry again."));
+        verify(storageService, times(2)).uploadImageSync(argThat(arg -> arg.length > 0), any(), eq("product"));
+        verify(productPictureRepository, times(1)).save(argThat(arg -> arg.getPictureUrl().equals(cloudinaryResponse.getSecureUrl())));
+
+        List<String> pictureUrl = setupProduct.getPictureUrl();
+        assertEquals(1, pictureUrl.size());
+        assertEquals(cloudinaryResponse.getSecureUrl(), pictureUrl.getFirst());
+    }
+
+    @Test
+    @DisplayName("Should throw storage action exception, case 2: all failed")
+    void uploadProductPictures_allRequestFailed() throws IOException {
+        MultipartFile[] files = {new MockMultipartFile("test", "faa".getBytes()), new MockMultipartFile("test1", "error".getBytes())};
+        when(productRepositoryMock.findById(setupProduct.getId())).thenReturn(Optional.of(setupProduct));
+        when(storageService.uploadImageSync(eq("faa".getBytes()), any(), any())).thenThrow(new IOException());
+        when(storageService.uploadImageSync(eq("error".getBytes()), any(), any())).thenThrow(new IOException());
+        assertThrows(StorageActionException.class, () -> productServiceMock.uploadProductPictures(setupProduct.getId(), files));
+
+        verify(storageService, times(2)).uploadImageSync(argThat(arg -> arg.length > 0), any(), eq("product"));
+        verify(productPictureRepository, times(0)).save(any());
+
+        List<String> pictureUrl = setupProduct.getPictureUrl();
+        assertEquals(0, pictureUrl.size());
+    }
+
+    @Test
+    @DisplayName("Should throw DatabaseInternalException")
+    void uploadProductPictures_saveToDBFailed() throws IOException {
+        MultipartFile[] files = {new MockMultipartFile("test", "faa".getBytes()), new MockMultipartFile("test1", "error".getBytes())};
+        when(productRepositoryMock.findById(setupProduct.getId())).thenReturn(Optional.of(setupProduct));
+        when(storageService.uploadImageSync(any(), any(), any())).thenReturn(cloudinaryResponse);
+        when(productPictureRepository.save(any())).thenThrow(new DataIntegrityViolationException(""));
+
+        assertThrows(DatabaseInternalException.class, () -> productServiceMock.uploadProductPictures(setupProduct.getId(), files));
+    }
+
+    @Test
+    @DisplayName("Should throw NotFoundEntityException")
+    void uploadProductPictures_notFoundProduct() throws IOException {
+        MultipartFile[] files = {new MockMultipartFile("test", "faa".getBytes()), new MockMultipartFile("test1", "error".getBytes())};
+        when(productRepositoryMock.findById(setupProduct.getId())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundEntityException.class, () -> productServiceMock.uploadProductPictures(setupProduct.getId(), files));
     }
 }

@@ -1,8 +1,18 @@
 package lumi.insert.app.service.implement;
 
-import java.math.BigDecimal; 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.github.f4b6a3.uuid.UuidCreator;
+import lumi.insert.app.core.entity.*;
+import lumi.insert.app.core.entity.nondatabase.CloudinaryResponse;
+import lumi.insert.app.core.repository.ProductPictureRepository;
+import lumi.insert.app.exception.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -18,8 +28,6 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import lumi.insert.app.aspect.annotation.ActivityLogger;
-import lumi.insert.app.core.entity.Category;
-import lumi.insert.app.core.entity.Product;
 import lumi.insert.app.core.entity.nondatabase.ActivityAction;
 import lumi.insert.app.core.entity.nondatabase.SliceIndex;
 import lumi.insert.app.core.repository.CategoryRepository;
@@ -34,12 +42,10 @@ import lumi.insert.app.dto.response.ProductDeleteResponse;
 import lumi.insert.app.dto.response.ProductName;
 import lumi.insert.app.dto.response.ProductResponse;
 import lumi.insert.app.dto.response.ProductStockResponse;
-import lumi.insert.app.exception.BoilerplateRequestException;
-import lumi.insert.app.exception.DuplicateEntityException;
-import lumi.insert.app.exception.NotFoundEntityException;
 import lumi.insert.app.mapper.ProductMapper;
 import lumi.insert.app.service.ProductService;
 import lumi.insert.app.utils.generator.JpaSpecGenerator;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Implementation of {@link ProductService} for comprehensive inventory and product management.
@@ -69,6 +75,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     JpaSpecGenerator jpaSpecGenerator;
+
+    @Autowired
+    CloudinaryStorageServiceImpl storageService;
+
+    @Autowired
+    ProductPictureRepository productPictureRepository;
 
     /**
      * Creates a new product and increments the associated category's item count.
@@ -401,6 +413,85 @@ public class ProductServiceImpl implements ProductService {
         List<ProductOutOfStock> outOfStockProducts = productRepository.findAllOutOfStockProduct();
         log.debug("Found {} out-of-stock products", outOfStockProducts.size());
         return outOfStockProducts;
+    }
+
+    /**
+     * Uploads multiple pictures and associates them with a product.
+     * <p>
+     * This method implements a manual compensation logic: if the database persistence fails
+     * after images are uploaded to the cloud storage, it attempts to delete the orphaned
+     * cloud assets to maintain consistency.
+     * </p>
+     *
+     * @param id    the product identifier.
+     * @param files array of multipart files to be uploaded.
+     * @return {@code true} if all files were successfully uploaded and persisted.
+     * @throws StorageActionException    if a network or I/O error occurs during upload.
+     * @throws DatabaseInternalException if persistence fails, triggering the cleanup process.
+     */
+    // Implement parallel stream and attempt values to this method
+    @Caching(
+        evict = {
+            @CacheEvict(value = "products", key = "#id")
+        }
+    )
+    @Override
+    public String uploadProductPictures(Long id, MultipartFile[] files) {
+        log.info("Uploading {} pictures for Product id={}", files.length, id);
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> {
+                log.debug("Pictures upload failed, pproduct not found id={}", id);
+                return new NotFoundEntityException("Product with ID " + id + " was not found");
+            });
+
+        AtomicInteger failedAttempt = new AtomicInteger(0);
+
+        List<String> pictureUrl = Collections.synchronizedList(new ArrayList<>());
+        Arrays.stream(files).parallel().forEach(file -> {
+            String publicId = null;
+            String fileName = "product-pictures-" + UuidCreator.getTimeOrderedEpochFast();
+
+            try {
+                CloudinaryResponse upload = storageService.uploadImageSync(file.getBytes(), fileName ,"product");
+
+                ProductPicture productPicture = ProductPicture.builder()
+                    .id(UuidCreator.getTimeOrderedEpochFast())
+                    .pictureUrl(upload.getSecureUrl())
+                    .product(product)
+                    .publicId(upload.getPublicId())
+                    .build();
+
+                publicId = upload.getPublicId();
+
+                productPictureRepository.save(productPicture);
+                pictureUrl.add(upload.getSecureUrl());
+                log.info("Product picture uploaded for ID={}, publicId={}", id, publicId);
+            } catch (IOException e) {
+                failedAttempt.incrementAndGet();
+                log.error("Upload failed for productId={}, messages={}", id, e.getMessage());
+//                throw new StorageActionException("Server couldn't complete the request due to internal problem, try again or contact developer");
+            } catch (Exception e) {
+                log.error("Save to database failed for productId={}, attempting to delete image at storage. Messages={}", id, e.getMessage());
+
+                if(publicId != null) {
+                    if(!(storageService.deleteImage(publicId))) log.error("Failed to delete image with publicId: {}", publicId);
+                }
+                throw new DatabaseInternalException("Server couldn't complete the request due to internal problem, try again or contact developer");
+            }
+        });
+
+        int failed = failedAttempt.get();
+
+        if(!pictureUrl.isEmpty()) product.getPictureUrl().addAll(pictureUrl);
+
+        if(failed == files.length){
+            throw new StorageActionException("Server couldn't complete the request due to internal problem, try again or contact developer");
+        } else if (failed > 0 && failed < files.length) {
+            return failed + " pictures failed to upload due to internal or provider problem, check your uploaded pictures and retry again.";
+        } else {
+            return "Upload product's pictures completed successfully for product with ID: " + id;
+        }
+
     }
 
 }

@@ -20,6 +20,9 @@ public record EmployeeResponse (
     @Schema(description = "The authorization level or department assigned to this employee", example = "ADMIN")
     EmployeeRole role,
 
+    @Schema(description = "Pictures url that represent and desribe the employee")
+    String pictureUrl,
+
     @Schema(description = "Join date of the employee", example = "2024-12-31T23:59:59")
     LocalDateTime joinDate
 

@@ -1,7 +1,8 @@
 package lumi.insert.app.controller.product;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -176,5 +177,70 @@ public class ProductControllerCreateTest extends BaseProductControllerTest{
         .andExpect(status().isBadRequest()) 
         .andExpect(jsonPath("$.errors").isNotEmpty())
         .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "WAREHOUSE")
+    @DisplayName("Should response exact string when request is valid")
+    public void uploadProductPicturesAPI_shouldReturnString() throws Exception{
+        when(productService.uploadProductPictures(any(), any())).thenReturn("Upload product's pictures completed successfully for product with ID: 1");
+
+        mockMvc.perform(
+                multipart("/api/products/1/pictures")
+                    .accept(MediaType.APPLICATION_JSON_VALUE)
+                    .file(mockMultipartFile)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data").value("Upload product's pictures completed successfully for product with ID: 1"))
+            .andExpect(jsonPath("$.errors").isEmpty());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "WAREHOUSE")
+    @DisplayName("Should return bad request when file is empty")
+    public void uploadProductPicturesAPI_emptyFile_returnBadReq() throws Exception{
+        mockMvc.perform(
+                multipart("/api/products/1/pictures")
+                    .accept(MediaType.APPLICATION_JSON_VALUE)
+                    .file(mockBroken)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.errors").value("File picture cannot be empty!"));
+
+        verify(productService, times(0)).uploadProductPictures(any(), any());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "WAREHOUSE")
+    @DisplayName("Should return bad request when file exceed max size")
+    public void uploadProductPicturesAPI_bigSize_returnBadReq() throws Exception{
+        mockMvc.perform(
+                multipart("/api/products/1/pictures")
+                    .accept(MediaType.APPLICATION_JSON_VALUE)
+                    .file(mockBigSize)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.errors").value("File size must be less than 10Mb"));
+
+        verify(productService, times(0)).uploadProductPictures(any(), any());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "WAREHOUSE")
+    @DisplayName("Should return bad request when request type is not image")
+    public void uploadProductPicturesAPI_nonImage_returnBadReq() throws Exception{
+        mockMvc.perform(
+                multipart("/api/products/1/pictures")
+                    .accept(MediaType.APPLICATION_JSON_VALUE)
+                    .file(mockNotImage)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.errors").value("File format type must be image"));
+
+        verify(productService, times(0)).uploadProductPictures(any(), any());
     }
 }

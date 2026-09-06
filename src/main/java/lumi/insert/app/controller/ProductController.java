@@ -2,9 +2,12 @@ package lumi.insert.app.controller;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import lumi.insert.app.dto.request.*;
+import lumi.insert.app.exception.ForbiddenRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Slice;
@@ -12,12 +15,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.validation.Valid;
@@ -50,6 +49,8 @@ import lumi.insert.app.utils.generator.DateUtils;
 @Slf4j
 @Tag(name = "Products", description = "Endpoints for managing products and inventory")
 public class ProductController {
+
+    private final int fileUploadSize = 10 * 1024 * 1024;
 
     @Autowired
     ProductService productService;
@@ -312,6 +313,30 @@ public class ProductController {
 
         log.info("Successfully updated product with ID: {}", id);
         return ResponseEntity.ok(wrappedResult);   
+    }
+
+    @Operation(summary = "Upload product's pictures", description = "Updates information for an existing product")
+    @ApiResponse(responseCode = "200", description = "Product's pictures uploaded successfully")
+    @ApiResponse(responseCode = "404", description = "Product not found")
+    @ApiResponse(responseCode = "400", description = "Upload file doesn't meet criteria")
+    @PostMapping(
+        path = "/api/products/{id}/pictures",
+        produces = MediaType.APPLICATION_JSON_VALUE,
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @PreAuthorize("hasAnyRole('WAREHOUSE')")
+    ResponseEntity<WebResponse<String>> uploadProductPictures(@Parameter(description = "Product ID") @PathVariable(name = "id") Long id, @Parameter(description = "File(image) to be store") @RequestParam("files") MultipartFile[] files){
+        Arrays.stream(files).forEach(file -> {
+            if(file.isEmpty()) throw new ForbiddenRequestException("File picture cannot be empty!");
+            if(file.getSize() > fileUploadSize) throw new ForbiddenRequestException("File size must be less than 10Mb");
+            if(!(file.getContentType().contains("image"))) throw new ForbiddenRequestException("File format type must be image");
+        });
+
+        String resultFromService = productService.uploadProductPictures(id, files);
+
+        WebResponse<String> wrappedResult = WebResponse.getWrapper(resultFromService, null);
+
+        return ResponseEntity.ok(wrappedResult);
     }
 
     
