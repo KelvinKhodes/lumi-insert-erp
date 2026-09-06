@@ -16,6 +16,7 @@ import lumi.insert.app.dto.response.ProductDeleteResponse;
 import lumi.insert.app.dto.response.ProductName;
 import lumi.insert.app.dto.response.ProductResponse;
 import lumi.insert.app.dto.response.ProductStockResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface ProductService {
 
@@ -38,5 +39,7 @@ public interface ProductService {
     ProductDeleteResponse activateProduct(Long id);
 
     List<ProductOutOfStock> getOutOfStockProducts();
+
+    String uploadProductPictures(Long id, MultipartFile[] files);
 
 }
