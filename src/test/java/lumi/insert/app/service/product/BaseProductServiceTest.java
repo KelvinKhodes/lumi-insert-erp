@@ -1,5 +1,9 @@
 package lumi.insert.app.service.product;
 
+import lumi.insert.app.core.entity.Product;
+import lumi.insert.app.core.entity.nondatabase.CloudinaryResponse;
+import lumi.insert.app.core.repository.ProductPictureRepository;
+import lumi.insert.app.service.implement.CloudinaryStorageServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -57,9 +61,22 @@ public abstract class BaseProductServiceTest extends TestContainerTest {
 
     @Mock
     RedisConnectionFactory redisConnectionFactory;
+
+    @Mock
+    CloudinaryStorageServiceImpl storageService;
+
+    @Mock
+    ProductPictureRepository productPictureRepository;
  
     @Spy 
     ProductMapper productMapper = new ProductMapperImpl();
+
+    Product setupProduct;
+
+    CloudinaryResponse cloudinaryResponse = CloudinaryResponse.builder()
+        .secureUrl("testUrl.test")
+        .publicId("id123")
+        .build();
 
     @BeforeEach
     void setUp() {
@@ -81,6 +98,11 @@ public abstract class BaseProductServiceTest extends TestContainerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
         
         ReflectionTestUtils.setField(productMapper, "categoryMapper", new CategoryMapperImpl());
+
+        setupProduct = Product.builder()
+            .id(1L)
+            .name("Shoes")
+            .build();
     }
 
 }
