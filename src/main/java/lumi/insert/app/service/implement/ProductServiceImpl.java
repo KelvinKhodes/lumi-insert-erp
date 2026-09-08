@@ -451,7 +451,7 @@ public class ProductServiceImpl implements ProductService {
         List<String> pictureUrl = Collections.synchronizedList(new ArrayList<>());
 
         SecurityContext authContext = Optional.of(SecurityContextHolder.getContext())
-            .orElseThrow(() -> new BadCredentialsException(""));
+            .orElseThrow(() -> new BadCredentialsException("Authentification couldn't resolve, try to contact administrator."));
 
         Arrays.stream(files).parallel().forEach(file -> {
             String publicId = null;
