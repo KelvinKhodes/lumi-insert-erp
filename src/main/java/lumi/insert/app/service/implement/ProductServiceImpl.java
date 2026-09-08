@@ -2,15 +2,13 @@ package lumi.insert.app.service.implement;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.github.f4b6a3.uuid.UuidCreator;
 import lumi.insert.app.core.entity.*;
 import lumi.insert.app.core.entity.nondatabase.CloudinaryResponse;
+import lumi.insert.app.core.entity.nondatabase.EmployeeLogin;
 import lumi.insert.app.core.repository.ProductPictureRepository;
 import lumi.insert.app.exception.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +21,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
  
 import jakarta.transaction.Transactional;
@@ -447,11 +449,16 @@ public class ProductServiceImpl implements ProductService {
         AtomicInteger failedAttempt = new AtomicInteger(0);
 
         List<String> pictureUrl = Collections.synchronizedList(new ArrayList<>());
+
+        SecurityContext authContext = Optional.of(SecurityContextHolder.getContext())
+            .orElseThrow(() -> new BadCredentialsException("Authentification couldn't resolve, try to contact administrator."));
+
         Arrays.stream(files).parallel().forEach(file -> {
             String publicId = null;
             String fileName = "product-pictures-" + UuidCreator.getTimeOrderedEpochFast();
 
             try {
+                SecurityContextHolder.setContext(authContext);
                 CloudinaryResponse upload = storageService.uploadImageSync(file.getBytes(), fileName ,"product");
 
                 ProductPicture productPicture = ProductPicture.builder()
@@ -473,10 +480,13 @@ public class ProductServiceImpl implements ProductService {
             } catch (Exception e) {
                 log.error("Save to database failed for productId={}, attempting to delete image at storage. Messages={}", id, e.getMessage());
 
-                if(publicId != null) {
-                    if(!(storageService.deleteImage(publicId))) log.error("Failed to delete image with publicId: {}", publicId);
+                if (publicId != null) {
+                    if (!(storageService.deleteImage(publicId)))
+                        log.error("Failed to delete image with publicId: {}", publicId);
                 }
                 throw new DatabaseInternalException("Server couldn't complete the request due to internal problem, try again or contact developer");
+            } finally {
+                SecurityContextHolder.clearContext();
             }
         });
 
