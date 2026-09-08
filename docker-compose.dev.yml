@@ -4,7 +4,7 @@ services:
     image: lumi-insert:latest
     container_name: app
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_PROFILES_ACTIVE=dev
       - JAVA_OPTS=-Djava.security.egd=file:/dev/./urandom -Xms512m -Xmx900m -Xmn280m -XX:+UseG1GC -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Djava.util.concurrent.ForkJoinPool.common.parallelism=2
       - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD}
       - SMTP_MAIL_USERNAME=${SMTP_MAIL_USERNAME}
@@ -20,10 +20,19 @@ services:
       - LUMI_LOCALE=${LUMI_LOCALE}
     ports:
       - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --spider -q http://localhost:8080/actuator/health || exit 1" ]
+      interval: 60s
+      timeout: 10s
+      retries: 10
+      start_period: 400s
     depends_on:
-      - database
-      - rabbit-mq
-      - redis
+      database:
+        condition: service_healthy
+      rabbit-mq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./logs:/app/logs
       - maven-cache:/root/.m2
@@ -44,24 +53,36 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - ./database:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      start_period: 20s
     deploy:
       resources:
         limits:
-          cpus: '0.40'
-          memory: 256M
+          cpus: '0.30'
+          memory: 450M
         reservations:
-          memory: 128M
+          memory: 150M
 
   rabbit-mq:
     image: rabbitmq:3-management-alpine
     container_name: rabbit-mq
     volumes:
       - ./rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD-SHELL", "rabbitmq-diagnostics -q check_port_connectivity" ]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      start_period: 20s
     deploy:
       resources:
         limits:
-          cpus: '0.40'
-          memory: 300M
+          cpus: '2.0'
+          memory: 600M
         reservations:
           memory: 150M
 
@@ -69,8 +90,10 @@ services:
     image: grafana/promtail:3.6.9
     profiles: ["monitoring"]
     depends_on:
-      - app
-      - loki
+      app:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
     volumes:
       - ./logs:/var/log
       - ./promtail.yaml:/etc/promtail/config.yaml:ro
@@ -79,7 +102,7 @@ services:
       resources:
         limits:
           cpus: '0.10'
-          memory: 128M
+          memory: 150M
         reservations:
           memory: 32M
 
@@ -89,6 +112,12 @@ services:
     container_name: loki
     profiles: ["monitoring"]
     user: "0"
+    healthcheck:
+      test: ["CMD", "/usr/bin/loki", "-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     volumes:
       - ./loki-config.yaml:/etc/loki/config.yaml:ro
       - ./loki_data:/tmp/loki
@@ -107,17 +136,24 @@ services:
     profiles: ["monitoring"]
     user: "0"
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     volumes:
       - ./prometheus-config.yaml:/etc/prometheus/config.yaml:ro
       - ./prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/config.yaml'
       - '--storage.tsdb.path=/prometheus'
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:9090/-/healthy || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     deploy:
       resources:
         limits:
-          cpus: '0.15'
+          cpus: '0.10'
           memory: 128M
         reservations:
           memory: 64M
@@ -130,8 +166,10 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
-      - loki
-      - prometheus
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
     volumes:
@@ -140,8 +178,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.20'
-          memory: 500M
+          cpus: '0.40'
+          memory: 700M
         reservations:
           memory: 150M
 
@@ -151,17 +189,25 @@ services:
     restart: always
     volumes:
       - ./redis.conf:/etc/redis/redis.conf:ro
+      - redis-cache:/data
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     command: sh -c "redis-server /etc/redis/redis.conf --requirepass $$REDIS_PASSWORD"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG" ]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
+          cpus: '0.30'
+          memory: 400M
         reservations:
           memory: 128M
 
 
 volumes:
   maven-cache:
+  redis-cache:
